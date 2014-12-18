@@ -41,3 +41,10 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+.settings
+frameworks
+runtime
+tools
+.cocos-project.json
+.project
+pomelo-cocos2d-js
