@@ -79,6 +79,7 @@ var HelloWorldLayer = cc.Layer.extend({
 		var res = [];
 		res.push("res/Plist.plist");
 		res.push("res/Plist1.plist");
+		res.push("res/rope_break.plist");
 		
 		res.push("res/1.png");
 		res.push("res/normal1.png");
@@ -144,8 +145,8 @@ var SecondLayer = cc.Layer.extend({
 		ps.setProgress(1.5);
 		ps.setAnchorPoint(cc.p(0.5,1));
 //		cc.w.Layout.testNode(ps);
-		ps.runAction(cc.w.Action.swing(ps,3,90));
-		
+		ps.runAction(cc.w.Action.swing(ps,5,90));
+//		ps.runAction(cc.scaleTo(3, 1, 2));
 		breakAnimateSp = new otherAnimation.SpriteRopeBreak();
 		breakAnimateSp.x = (cc.winSize.width/2);
 		breakAnimateSp.y =(cc.winSize.height/2);
@@ -231,11 +232,14 @@ var SecondLayer = cc.Layer.extend({
 				res.CloseNormal_png,
 				res.CloseSelected_png,
 				function () {
- jsb.reflection.callStaticMethod("org/cocos2dx/javascript/AppActivity","test","()V");
+					if (cc.sys.isNative === true) {
+						jsb.reflection.callStaticMethod("org/cocos2dx/javascript/AppActivity","test","()V");
+					}
 //					cc.log("Menu is clicked!");
 // cc.director.popScene();
 //					breakAnimateSp.animate();
-					cc.director.runScene(new cc.w.Scene(new HelloWorldLayer()));
+ 
+					cc.director.runScene(new cc.w.Scene(new cc.w.CollisionLayer()));
 				}, this);
 		closeItem.attr({
 			x: size.width-60,
