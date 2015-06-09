@@ -1,4 +1,4 @@
-cc.w = {};
+cc.w = cc.w||{};
 cc.w.Layout = {};
 cc.w.Layout.testNode = function(node){
 	var nodeParent = node.getParent();
@@ -169,9 +169,11 @@ cc.w.CollisionLayer = cc.LayerColor.extend({
 	onEnter:function(){
 		this._super();
 	},
-	_speed:5,
+	_speed:1,
 	_distance:cc.p(1, 1),
 	_centerPoint:null,
+	_defaultLineLen:80,
+	_defaultPoint:null,//离中心最近的点。这个第次根据事件位置变化
 	_endPoint:null,
 	_totalLen:0,
 	_state:0,
@@ -195,10 +197,13 @@ cc.w.CollisionLayer = cc.LayerColor.extend({
 		}
 		
 		var cNode = this.detectCollistion(this._node);
-		if(cNode||currentLen>=this._totalLen){
+		if(
+				cNode||
+				currentLen>=this._totalLen){
 			if(cNode){
-				this._currentPoint.x = cNode.x;
-				this._currentPoint.y = cNode.y;
+//				this._currentPoint.x = cNode.x;
+//				this._currentPoint.y = cNode.y;
+				this._computeEndPoint(cNode.getPosition(), true);
 			}
 			this.unschedule(this.moveAway);
 			this.unschedule(this.moveBack);
@@ -211,7 +216,9 @@ cc.w.CollisionLayer = cc.LayerColor.extend({
 		this._lineLayer.setEndPosition(this._currentPoint);
 	},
 	moveBack:function(){
-		var minDis = 0;
+		var minDis = 
+//			0;
+		this._defaultLineLen;
 		this._updateState(this._stateGoingBack);
 		var contentSize = this.getContentSize();
 		var currentLen = cc.pDistance(this._centerPoint, this._currentPoint);
@@ -249,9 +256,8 @@ cc.w.CollisionLayer = cc.LayerColor.extend({
 		this._node = this.createNode(20);
 		this.addChild(this._node,100);
 		
+		//设置画线的中心点
 		this._centerPoint = cc.p(this.getContentSize().width/2,this.getContentSize().height-80);
-		this._currentPoint = cc.p(this._centerPoint);
-		this._node.setPosition(this._currentPoint);
 		
 		var label = new cc.LabelTTF("!",null,20);
 		this._node.addChild(label);
@@ -291,33 +297,108 @@ cc.w.CollisionLayer = cc.LayerColor.extend({
 				}
 				var target = event.getCurrentTarget();
 				var point = target.convertToNodeSpace(touch.getLocation());
+				if (point.y>self._centerPoint.y) {
+					return;
+				}
 //				pointNode.setPosition(point);
 //				var node = cc.w.CollisionDetectionUtil.pointInWhithNode(point, nodes)
 				self.detectCollistion(pointNode);
 				
 				cc.log("touch at: x="+point.x+" y="+point.y);
 //				cc.log("centerPoint : x="+centerPoint.x+" y="+self._centerPoint.y);
-				var angle = 180-cc.w.Math.computeAngle(self._centerPoint, point)-90;
-//				cc.log("angle is : "+angle);
-				self._node.setRotation(angle);
-				var subP = cc.pSub(self._centerPoint, point);
-				cc.log("subP : x="+subP.x+" y="+subP.y);
-//				self._node.setRotation(45);
-				var dur = cc.director.getWinSize().height/self._speed;
-				var xSpeed = subP.x/dur,ySpeed = subP.y/dur;
-				self._distance = cc.p(xSpeed,ySpeed);
 				
-				self._endPoint = point;
-				self._totalLen = cc.pDistance(self._centerPoint, self._endPoint);
+				self._computeEndPoint(point, false);
 				
 				self.unschedule(self.moveAway);
 				self.schedule(self.moveAway,0.01);
 			}
 		});
 		cc.eventManager.addListener(this.eventListener, this);
-		
-		this._lineLayer = new cc.w.DrawLineLayer(cc.Color(255, 255, 0, 255),5,self._centerPoint,self._endPoint);
+		this._setDefaultPosition();
+		this._lineLayer = new cc.w.DrawLineLayer(cc.Color(255, 255, 0, 255),5,this._centerPoint,this._defaultPoint);
 		this.addChild(this._lineLayer);
+	},
+	_setDefaultPosition:function(eventPoint){
+		if(eventPoint){
+			var scale = this._defaultLineLen/cc.pDistance(this._centerPoint, eventPoint);
+			var vEvnet = cc.pSub(this._centerPoint, eventPoint);
+			var vDefault = cc.pMult(vEvnet, scale);
+			var vDefaultX = Math.abs(vDefault.x);
+			var vDefaultY = Math.abs(vDefault.y);
+			//把向量xy转换为坐标xy
+			var x,y;
+			if (eventPoint.x>this._centerPoint.x) {
+				x = this._centerPoint.x + vDefaultX;
+			}else{
+				x = this._centerPoint.x - vDefaultX;
+			}
+			y = this._centerPoint.y - vDefaultY;
+			this._defaultPoint = cc.p(x, y);
+		}else{
+			this._defaultPoint = cc.pAdd(this._centerPoint, cc.p(0, -this._defaultLineLen));
+		}
+		this._currentPoint = cc.p(this._defaultPoint);
+		this._node.setPosition(this._defaultPoint);
+	},
+	_computeEndPoint:function(eventPoint,isEnd){
+		this._setDefaultPosition(eventPoint);
+		return;
+		if (isEnd) {
+			this._endPoint = eventPoint;
+		}else{
+			//整体Y轴的高度
+			var yLen = this._centerPoint.y;
+			//从事件点到中心点的X和Y
+			var distanceEvent = cc.pSub(this._centerPoint,eventPoint);
+			//事件y轴的高度
+			var yLenEvent = Math.abs(distanceEvent.y);
+			//事件x轴的高度
+			var xLenEvent = Math.abs(distanceEvent.x);
+			//缩放比率
+			var lenScale = yLenEvent/yLen;
+			//从原点到中心点的X和Y
+			var distanceMax = cc.pSub(this._centerPoint,cc.p());
+			var x = xLenEvent/lenScale;
+			var y = yLenEvent/lenScale;
+			if (x>distanceMax.x) {
+				x = distanceMax.x;
+				lenScale = x/xLenEvent;
+				y = yLenEvent*lenScale;
+			}else{
+				y = distanceMax.y;
+				lenScale = y/yLenEvent;
+				x = xLenEvent*lenScale;
+			}
+			
+			var defaultDistanceScale = this._defaultLineLen/this._centerPoint.y;
+//			var currentPointV = cc.pMult(cc.p(x,y), defaultDistanceScale);
+			
+			//把向量xy转换为坐标xy
+			if (eventPoint.x>this._centerPoint.x) {
+				x += this._centerPoint.x;
+//				currentPointV.x = this._centerPoint.x - currentPointV.x;
+			}else{
+				x = this._centerPoint.x - x;
+//				currentPointV.x = this._centerPoint.x + currentPointV.x;
+			}
+			y = this._centerPoint.y - y;
+			this._endPoint = cc.p(x,y);
+//			currentPointV.y = this._centerPoint.y - currentPointV.y;
+//			this._currentPoint = currentPointV;
+			
+			var self = this;
+			var angle = 180-cc.w.Math.computeAngle(this._centerPoint, this._endPoint)-90;
+//			cc.log("angle is : "+angle);
+			this._node.setRotation(angle);
+			var subP = cc.pSub(self._centerPoint, this._endPoint);
+			cc.log("subP : x="+subP.x+" y="+subP.y);
+//			self._node.setRotation(45);
+			var dur = cc.director.getWinSize().height/self._speed;
+			var xSpeed = subP.x/dur,ySpeed = subP.y/dur;
+			self._distance = cc.p(xSpeed,ySpeed);
+			
+		}
+		this._totalLen = cc.pDistance(this._centerPoint, this._endPoint);
 	},
 	detectCollistion:function(pointNode){
 		var node = cc.w.CollisionDetectionUtil.nodeInWhithNode(pointNode, this._nodes)
@@ -376,7 +457,7 @@ cc.w.DrawLineLayer = cc.Layer.extend({
 		this._super();
 	},
 	ctor:function (color,width,sp,ep) {
-		cc.log("3.1415926535897932384626");
+//		cc.log("3.1415926535897932384626");
 		this._super();
 		this._startPosition = sp;
 		var contentSize = this.getContentSize();
@@ -445,3 +526,123 @@ cc.w.CollisionDetectionUtil.nodeInWhithNode = function(node,nodes) {
  * "https://itunes.apple.com/search?term=jack+johnson&limit=1"); xhr.send();
  * 
  */
+
+
+cc.w.WLoaderScene = cc.Scene.extend({
+	_interval : null,
+	_label : null,
+	_className:"WLoaderScene",
+	_resources:[],
+	_sb:null,
+	/**
+	 * Contructor of cc.WLoaderScene
+	 * @returns {boolean}
+	 */
+	init : function(){
+		var self = this;
+
+		//logo
+		var logoWidth = 160;
+		var logoHeight = 200;
+
+		// bg
+		var bgLayer = self._bgLayer = new cc.LayerColor(cc.color(32, 32, 32, 255));
+		bgLayer.setPosition(cc.visibleRect.bottomLeft);
+		self.addChild(bgLayer, 0);
+
+		//image move to CCSceneFile.js
+		var fontSize = 24, lblHeight =  -logoHeight / 2 + 100;
+		if(cc._loaderImage){
+			//loading logo
+			cc.loader.loadImg(cc._loaderImage, {isCrossOrigin : false }, function(err, img){
+				logoWidth = img.width;
+				logoHeight = img.height;
+				self._initStage(img, cc.visibleRect.center);
+			});
+			fontSize = 14;
+			lblHeight = -logoHeight / 2 - 10;
+		}
+		//loading percent
+		var label = self._label = new cc.LabelTTF("Loading... 0%", "Arial", fontSize);
+		label.setPosition(cc.pAdd(cc.visibleRect.center, cc.p(0, lblHeight)));
+		label.setColor(cc.color(180, 180, 180));
+		bgLayer.addChild(this._label, 10);
+		return true;
+	},
+
+	_initStage: function (img, centerPos) {
+		var self = this;
+		var texture2d = self._texture2d = new cc.Texture2D();
+		texture2d.initWithElement(img);
+		texture2d.handleLoadedTexture();
+		var logo = self._logo = new cc.Sprite(texture2d);
+		logo.setScale(cc.contentScaleFactor());
+		logo.x = centerPos.x;
+		logo.y = centerPos.y;
+		self._bgLayer.addChild(logo, 10);
+	},
+	/**
+	 * custom onEnter
+	 */
+	 onEnter: function () {
+		 var self = this;
+		 cc.Node.prototype.onEnter.call(self);
+		 self.schedule(self._startLoading, 0.3);
+	 },
+	 /**
+	  * custom onExit
+	  */
+	 onExit: function () {
+		 cc.Node.prototype.onExit.call(this);
+		 var tmpStr = "Loading... 0%";
+		 this._label.setString(tmpStr);
+	 },
+
+	 /**
+	  * init with resources
+	  * @param {Array} resources
+	  * @param {Function|String} cb
+	  */
+	 initWithResources: function (resources, cb) {
+		 this._resources.push(resources);
+		 this._cb = cb;
+	 },
+
+	 _startLoading: function () {
+		 var self = this;
+		 self.unschedule(self._startLoading);
+		 var res = self._resources;
+		 cc.loader.load(res,
+				 function (result, count, loadedCount) {
+			 var percent = (loadedCount / count * 100) | 0;
+			 percent = Math.min(percent, 100);
+			 self._label.setString("Loading... " + percent + "%");
+		 }, function () {
+			 if (self._cb)
+				 self._cb();
+		 });
+	 }
+});
+/**
+ * <p>cc.WLoaderScene.preload can present a loaderScene with download progress.</p>
+ * <p>when all the resource are downloaded it will invoke call function</p>
+ * @param resources
+ * @param cb
+ * @returns {cc.WLoaderScene|*}
+ * @example
+ * //Example
+ * cc.WLoaderScene.preload(g_resources, function () {
+       cc.director.runScene(new HelloWorldScene());
+   }, this);
+ */
+cc.w.WLoaderScene.preload = function(resources, cb){
+	var _cc = cc.w;
+	if(!_cc.loaderScene) {
+		_cc.loaderScene = new cc.w.WLoaderScene();
+		_cc.loaderScene.init();
+	}
+	_cc.loaderScene.initWithResources(resources, cb);
+
+	cc.director.runScene(_cc.loaderScene);
+	return _cc.loaderScene;
+};
