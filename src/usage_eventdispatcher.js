@@ -1,28 +1,15 @@
 var CUSTOM_EVENT_NAMES = {
     "TEST":"CUSTOM_EVENT_TEST"
 }; 
-var UsageLayerEventDispatcher = cc.Layer.extend({
+var UsageLayerEventDispatcher = UsageBaseLayer.extend({
 	_className:"UsageLayerEventDispatcher",
 	ctor:function(){
 		this._super();
-		var layer = new cc.LayerColor(cc.color(0,155,155));
-		this.addChild(layer);
 		this.setupView();
 	},
 	setupView:function(){
+		this._super();
 		var size = cc.winSize;
-		var closeItem = new cc.MenuItemImage(
-				"res/CloseNormal.png",
-				"res/CloseSelected.png",
-				function () {
-					cc.director.popScene();
-				}, this);
-		closeItem.attr({
-			x: size.width-60,
-			y: 60,
-			anchorX: 0.5,
-			anchorY: 0.5
-		});
 		var item = new cc.MenuItemFont("PERFOM CUSTOM EVENT", this.performEventMenuItemCallback, this); 
 		item.attr({
 			x:size.width/2,
@@ -30,7 +17,7 @@ var UsageLayerEventDispatcher = cc.Layer.extend({
 		})
 		item.setFontSize(36);
 		item.setFontName("Times New Roman");
-		var menu = new cc.Menu(item,closeItem);
+		var menu = new cc.Menu(item);
 		menu.x = 0;
 		menu.y = 0;
 		this.addChild(menu);

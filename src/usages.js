@@ -1,10 +1,18 @@
 var Usages = [
      {
-    	 title:"UsageLayerEventDispatcher",
+    	 title:"EventDispatcher",
     	 linksrc:"src/usage_eventdispatcher.js",
     	 resource:g_resources,
     	 scene:function () {
     		 return new cc.w.Scene(new UsageLayerEventDispatcher());
+    	 }
+     },
+     {
+    	 title:"Slots",
+    	 linksrc:"src/slots.js",
+    	 resource:g_resources,
+    	 scene:function () {
+    		 return new cc.w.Scene(new UsageLayerSlots());
     	 }
      }
 ];
@@ -18,6 +26,34 @@ var pushUsageScene = function(idx){
 		}
 	}, this);
 };
+var UsageBaseLayer = cc.Layer.extend({
+	_className:"UsageBaseLayer",
+	ctor:function(){
+		this._super();
+		this.setupView();
+	},
+	setupView:function(){
+		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
+		this.addChild(layer);
+		var size = cc.winSize;
+		var closeItem = new cc.MenuItemImage(
+				"res/CloseNormal.png",
+				"res/CloseSelected.png",
+				function () {
+					cc.director.popScene();
+				}, this);
+		closeItem.attr({
+			x: size.width-60,
+			y: 60,
+			anchorX: 0.5,
+			anchorY: 0.5
+		});
+		var menu = new cc.Menu(closeItem);
+		menu.x = 0;
+		menu.y = 0;
+		this.addChild(menu);
+	},
+});
 var UsagesLayer = cc.Layer.extend({
 	_className :"UsagesLayer",
 	ctor:function(){
