@@ -60,9 +60,8 @@ cc.game.onStart = function(){
     cc.view.setDesignResolutionSize(960, 640, cc.ResolutionPolicy.SHOW_ALL);
     cc.view.resizeWithBrowserSize(true);
     //load resources
-    cc.LoaderScene
-    cc.w.WLoaderScene.preload(res, function () {
-    	cc.director.runScene(new cc.w.Scene(new SecondLayer()));
+    cc.LoaderScene.preload(res, function () {
+    	cc.director.runScene(new cc.w.Scene(new UsagesLayer()));
     }, this);
 };
 cc.game.run();

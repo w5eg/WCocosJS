@@ -12,20 +12,12 @@ cc.w.Layout.testNode = function(node){
 	}
 };
 cc.w.Scene = cc.Scene.extend({
-	_layer:null,
-	onEnter:function () {
-		this._super();
-		if (this._layer) {
-			this.addChild(this._layer);
-		}
-	},
-	/**
-	 * Constructor of cc.w.Scene
-	 */
 	_className:"WScene",
 	ctor:function (layer) {
 		this._super();
-		this._layer = layer;
+		if (layer) {
+			this.addChild(layer);
+		}
 	}
 });
 cc.w.ProgressSprite = cc.Sprite.extend({
@@ -646,3 +638,30 @@ cc.w.WLoaderScene.preload = function(resources, cb){
 	cc.director.runScene(_cc.loaderScene);
 	return _cc.loaderScene;
 };
+var DemoLayer = cc.Layer.extend({
+	ctor:function(){
+		this._super();
+		var layer = new cc.LayerColor(cc.color(55,55,55));
+		this.addChild(layer);
+		this.setupView();
+	},
+	setupView:function(){
+		var size = cc.winSize;
+		var closeItem = new cc.MenuItemImage(
+				res.CloseNormal_png,
+				res.CloseSelected_png,
+				function () {
+					cc.log("Menu is clicked!");
+				}, this);
+		closeItem.attr({
+			x: size.width-60,
+			y: 60,
+			anchorX: 0.5,
+			anchorY: 0.5
+		});
+		var menu = new cc.Menu(closeItem);
+		menu.x = 0;
+		menu.y = 0;
+		this.addChild(menu, 1);
+	}
+});

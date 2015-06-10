@@ -14,6 +14,8 @@
         "src/resource.js",
         "src/man_animation.js",
         "src/other_animation.js",
-        "src/app.js"
+        "src/app.js",
+        "src/usage_eventdispatcher.js",
+        "src/usages.js"
     ]
 }

@@ -229,8 +229,8 @@ var SecondLayer = cc.Layer.extend({
 
 		// add a "close" icon to exit the progress. it's an autorelease object
 		var closeItem = new cc.MenuItemImage(
-				res.CloseNormal_png,
-				res.CloseSelected_png,
+				"res/CloseNormal.png",
+				"res/CloseSelected.png",
 				function () {
 					if (cc.sys.isNative === true) {
 						jsb.reflection.callStaticMethod("org/cocos2dx/javascript/AppActivity","test","()V");
