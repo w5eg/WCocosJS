@@ -123,7 +123,7 @@ var SecondLayer = cc.Layer.extend({
 //		man.doAimateNormal();//播放正常拉到宝物的动画，就是眼睛发光那个
 //		oMan.setOpacity(0);//这里注意了！播放时要把原来主角设置为透明的。播放结束后再还原回来
 //		man.stopAllActions();
-//		cc.w.Layout.testNode(oMan);
+//		cc.w.layout.testNode(oMan);
 		
 // this.loadSth();
 //		var action = doManAnimationNormalOnNode(man);
@@ -144,8 +144,8 @@ var SecondLayer = cc.Layer.extend({
 		this.addChild(ps);
 		ps.setProgress(1.5);
 		ps.setAnchorPoint(cc.p(0.5,1));
-//		cc.w.Layout.testNode(ps);
-		ps.runAction(cc.w.Action.swing(ps,5,90));
+//		cc.w.layout.testNode(ps);
+		ps.runAction(cc.w.action.swing(ps,5,90));
 //		ps.runAction(cc.scaleTo(3, 1, 2));
 		breakAnimateSp = new otherAnimation.SpriteRopeBreak();
 		breakAnimateSp.x = (cc.winSize.width/2);
@@ -197,7 +197,7 @@ var SecondLayer = cc.Layer.extend({
 		sp1.x = (sp.getContentSize().width/2);
 		sp1.y =(sp.getContentSize().height/2);
 		sp.addChild(sp1);
-		cc.w.Layout.testNode(sp1);
+		cc.w.layout.testNode(sp1);
 		var animFrames1 = [];
 		for (var i = 3; i <= 14; i++) {
 			if(i===7||i===8)continue;

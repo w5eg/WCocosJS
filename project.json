@@ -10,12 +10,13 @@
         "cocos2d"
     ],
     "jsList":[
-        "src/w.js",
         "src/resource.js",
+        "src/app.js",
         "src/man_animation.js",
         "src/other_animation.js",
-        "src/app.js",
+        "src/w.js",
+        "src/usages.js",
         "src/usage_eventdispatcher.js",
-        "src/usages.js"
+        "src/slots.js"
     ]
 }

@@ -1,7 +1,7 @@
 var CUSTOM_EVENT_NAMES = {
     "TEST":"CUSTOM_EVENT_TEST"
 }; 
-var UsageLayerEventDispatcher = UsageBaseLayer.extend({
+cc.w.usage.UsageLayerEventDispatcher = cc.w.view.UsageBaseLayer.extend({
 	_className:"UsageLayerEventDispatcher",
 	ctor:function(){
 		this._super();

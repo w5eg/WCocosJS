@@ -1,6 +1,13 @@
+
+/**
+ * BUG:如果编译不过。可能并没有错误，找到相关的类。稍微加个字符再删除，重新保存一下，再运行可能就好了。
+ * 注意:有时上面的问题可能是没有关联相关的JS文件导致的。关联文件的顺序也可能会有影响。
+ */
 cc.w = cc.w||{};
-cc.w.Layout = {};
-cc.w.Layout.testNode = function(node){
+/**视图组件包名*/
+cc.w.view = cc.w.view||{};
+cc.w.layout = cc.w.layout||{};
+cc.w.layout.testNode = function(node){
 	var nodeParent = node.getParent();
 	if(nodeParent&&node){
 		var layer = new cc.LayerColor(cc.color(0,100,200,150));
@@ -11,6 +18,7 @@ cc.w.Layout.testNode = function(node){
 		nodeParent.addChild(layer);
 	}
 };
+/**一个接收一个Layer为子视图的Scene子类*/
 cc.w.Scene = cc.Scene.extend({
 	_className:"WScene",
 	ctor:function (layer) {
@@ -20,6 +28,7 @@ cc.w.Scene = cc.Scene.extend({
 		}
 	}
 });
+/**一个圆形进度条*/
 cc.w.ProgressSprite = cc.Sprite.extend({
 	_className:"WProgressSprite",
 	_progress:1,//from 0.0~1.0
@@ -106,9 +115,9 @@ sin = function(d){
 cos = function(d){
 	return Math.cos(d);
 }
-cc.w.Action = {};
-cc.w.Math = {};
-cc.w.Math.computeAngle = function(centerPoint,aroundPoint){
+cc.w.action = cc.w.action||{};
+cc.w.math = cc.w.math||{};
+cc.w.math.computeAngle = function(centerPoint,aroundPoint){
 	var p = cc.pSub(centerPoint, aroundPoint);
 //	cc.log("pSub x="+p.x +" y="+p.y);
 	var angle = cc.pToAngle(cc.pSub(centerPoint, aroundPoint));
@@ -121,7 +130,7 @@ cc.w.Math.computeAngle = function(centerPoint,aroundPoint){
  * @param startAngle 开始角度，最小值为-90，是大值为90
  * @returns 动画对象
  */
-cc.w.Action.swing = function(node,duration,startAngle){
+cc.w.action.swing = function(node,duration,startAngle){
 	if(duration<0)duration = 1;
 	var _minAngle = -90;
 	var _maxAngle = 90;
@@ -140,7 +149,7 @@ cc.w.Action.swing = function(node,duration,startAngle){
 	var swingAction = cc.sequence(swingL2R,swingL2R.reverse());
 	return swingAction.repeatForever();
 }
-cc.w.currentNode = null;
+cc.w.currentNode = null;//???为什么不定义在CollisionLayer内部？？？
 cc.w.CollisionLayer = cc.LayerColor.extend({
 	_nodes : [],
 	_node:null,
@@ -638,7 +647,7 @@ cc.w.WLoaderScene.preload = function(resources, cb){
 	cc.director.runScene(_cc.loaderScene);
 	return _cc.loaderScene;
 };
-var DemoLayer = cc.Layer.extend({
+cc.w.DemoLayer = cc.Layer.extend({
 	ctor:function(){
 		this._super();
 		var layer = new cc.LayerColor(cc.color(55,55,55));
