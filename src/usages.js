@@ -83,7 +83,7 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
 		sp.setPosition(cc.winSize.width/2, cc.winSize.height/2);
 		sp.setOpacity(50)
 		this.addChild(sp);
-		
+//		sp.setColor(cc.color(255, 255, 0, 255));
 		var menuItems = new Array();
 //		cc.MenuItemFont.setFontName("Times New Roman");  
 //		cc.MenuItemFont.setFontSize(86); 
@@ -97,7 +97,6 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
 		var menu = new cc.Menu(menuItems);
 		menu.alignItemsVertically();
 		this.addChild(menu);
-		
 	},
 	menuItemCallback:function (sender) {
 		cc.w.usage.pushUsageScene(sender.getTag())
