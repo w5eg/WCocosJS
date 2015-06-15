@@ -1,13 +1,5 @@
 cc.w.slots = cc.w.slots||{};
-cc.w.slots.SlotCell = {
-		
-};
-/**
- * 老虎机结果对象
- */
-cc.w.slots.Result = {
-		
-};
+
 //老虎机状态
 cc.w.slots.STATE_STOPED = 0;
 cc.w.slots.STATE_RUNNING = 1;
@@ -15,6 +7,25 @@ cc.w.slots.STATE = cc.w.slots.STATE_STOPED;//0表示静止，1表示运行（当
 //老虎机结果
 cc.w.slots.RESULT = null;//
 cc.w.slots.EVENT_CYCLED = "cc.w.slots.EVENT_CYCLED";//老虎机运行一个循环事件
+//动画
+cc.w.slots.ACTION_START = null;//开始运动动画
+cc.w.slots.ACTION_STOP = null;//停止运动动画
+cc.w.slots.ACTION_CONSTANT = null;//匀速运动动画
+/////////////////////////////////////////////////////////////////////////////////////
+/**
+ * 老虎机一个CELL中的数据对象
+ */
+cc.w.slots.SlotCell = {
+
+};
+/**
+ * 老虎机结果对象
+ */
+cc.w.slots.Result = {
+	
+};
+
+/////////////////////////////////////////////////////////////////////////////////////
 /**
  * 老虎机的格子，一个格子显示一个图案，有一定的分数
  */
@@ -202,6 +213,9 @@ cc.w.view.SlotsNode = cc.Node.extend({
 		this._super();
 		this.setContentSize(size,height);
 		this.setAnchorPoint(0.5, 0.5);
+		
+//		cc.w.slots.ACTION_START = new cc.delayTime();
+	
 //		this.ignoreAnchorPointForPosition(false);
 		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
 		layer.setContentSize(this.getContentSize());
@@ -252,7 +266,7 @@ cc.w.view.SlotsNode = cc.Node.extend({
 		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_CYCLED);
 	}
 });
-
+/////////////////////////////////////////////////////////////////////////////////////
 cc.w.view.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 	_className:"UsageLayerSlots",
 	ctor:function(){

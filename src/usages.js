@@ -80,8 +80,10 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
 	},
 	setupView:function(){
 		var sp = new cc.Sprite("res/HelloWorld.png");
-		sp.setPosition(cc.winSize.width/2, cc.winSize.height/2);
-		sp.setOpacity(50)
+		sp.setAnchorPoint(0, 0);
+//		sp.setPosition(cc.winSize.width/2, cc.winSize.height/2);
+		sp.setPosition(20, cc.winSize.height-sp.getContentSize().height-20);
+//		sp.setOpacity(50)
 		this.addChild(sp);
 //		sp.setColor(cc.color(255, 255, 0, 255));
 		var menuItems = new Array();
