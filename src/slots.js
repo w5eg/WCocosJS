@@ -11,19 +11,20 @@ cc.w.slots.EVENT_CYCLED = "cc.w.slots.EVENT_CYCLED";//老虎机运行一个循�
 cc.w.slots.ACTION_START = null;//开始运动动画
 cc.w.slots.ACTION_STOP = null;//停止运动动画
 cc.w.slots.ACTION_CONSTANT = null;//匀速运动动画
+cc.w.slots.GROUP_NODE_HEIGHT = 0;
 /////////////////////////////////////////////////////////////////////////////////////
 /**
  * 老虎机一个CELL中的数据对象
  */
-cc.w.slots.SlotCell = {
-
-};
+cc.w.slots.SlotCell = cc.Class.extend({
+	
+});
 /**
  * 老虎机结果对象
  */
-cc.w.slots.Result = {
+cc.w.slots.Result = cc.Class.extend({
 	
-};
+});
 
 /////////////////////////////////////////////////////////////////////////////////////
 /**
@@ -51,6 +52,7 @@ cc.w.view.SlotsCellGroupNode = cc.Node.extend({
 	ctor:function(size,height){
 		this._super();
 		this.setContentSize(size,height);
+		cc.w.slots.GROUP_NODE_HEIGHT = height;
 //		this.setAnchorPoint(0.5, 0.5);0
 		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
 //		layer.setOpacity(30);
@@ -62,6 +64,9 @@ cc.w.view.SlotsCellGroupNode = cc.Node.extend({
 	setLeader:function(isLeader){
 		this._isLeader = isLeader;
 	},
+	isLeader:function(){
+		return this._isLeader;
+	},
 //	setOpacity:function(newValue){
 //		this._super(newValue);
 //		for ( var c in this.getChildren()) {
@@ -72,7 +77,7 @@ cc.w.view.SlotsCellGroupNode = cc.Node.extend({
 		var cellCount = 3;
 		var cellWidth = this.getContentSize().width;
 		var cellHeight = this.getContentSize().height/cellCount;
-		var fs = 5;
+		var fs = 10;
 		for (var i = 0; i < cellCount; i++) {
 			var cellNode = new cc.w.view.SlotsCellNode(cellWidth,cellHeight);
 			cellNode.setPosition(0, cellHeight*i)
@@ -123,7 +128,9 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 	_testMode:true,
 	_groups:null,
 	_headGroup:null,
+	_commonGroups:null,
 	_clippingNode:null,
+	_groupHeight:0,
 	ctor:function(size,height){
 		this._super();
 		this.setContentSize(size,height);
@@ -139,34 +146,42 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 	},
 	setupView:function(){
 		this._groups = new Array();
+		this._commonGroups = new Array();
 		//第一列有四个组。
 		var groupCount = 4;
 		var groupWidth = this.getContentSize().width;
 		var groupHeight = this.getContentSize().height;
+		this._groupHeight = groupHeight;
 		for (var i = 0; i < groupCount; i++) {
 			Array.prototype.map;
 			var group = new cc.w.view.SlotsCellGroupNode(groupWidth,groupHeight);
 			if (i==0) {
-				group
+				group.setLeader(true);
+				this._headGroup = group;
+			}else{
+				group.setLeader(false);
+				this._commonGroups.push(group);
 			}
+			
 //			group.setOpacity(5);
 			group.setPosition(0, this.getContentSize().height*2-i*groupHeight);
 			this.addClipedChild(group);
 			if (this._testMode) {
-				var label = new cc.LabelTTF("Group"+i,"Arial",40);
+				var label = new cc.LabelTTF("Group"+i,"Arial",30);
 				label.setTag(1003);
 				label.setColor(cc.color(0, 255, 0, 255));
 				label.setPosition(groupWidth/2, groupHeight/2);
 				group.addChild(label);
 			}
+			this._groups.push(group);
 		}
 	},
 	updateView:function(){
 
 	},
 	addClipedChild:function(child){
-//		this._clippingNode.addChild(child);
-		this.addChild(child);
+		this._clippingNode.addChild(child);
+//		this.addChild(child);
 	},
 	createRectStencil:function(size,height){
 		//以四个点确定的形状作为模版。至少要三个点才能确定形状
@@ -192,15 +207,41 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 	},
 	start:function(){
 		//TODO 根据当前状态和是否有结果来判断是否执行动画
-		if (cc.w.slots.STATE == cc.w.slots.STATE_RUNNING) {
-			return;
+//		if (cc.w.slots.STATE == cc.w.slots.STATE_RUNNING) {
+//			return;
+//		}
+		cc.log("wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"+this._groups.length);
+		for (var i = 0; i < this._groups.length; i++) {
+			var group = this._groups[i];
+			var action = cc.moveBy(0.2, cc.p(0, -cc.w.slots.GROUP_NODE_HEIGHT));
+			if (group === this._headGroup) {
+				cc.log("group isLeader");
+				var callback = cc.callFunc(this.onCycled, this);
+				var seq = cc.sequence(action,callback);
+				group.runAction(seq);
+			}else{ 
+				cc.log("group is not Leader");
+				group.runAction(action);
+			}
 		}
-		
 	},
 	stop:function(){
 		//强制停止动画，恢复到初始状态
 		this.reset();
 	},
+	onCycled:function(){
+		cc.log("wwwww")
+		cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_CYCLED);
+		var oldHeaderGroup = this._headGroup;
+		oldHeaderGroup.setLeader(false);
+		this._headGroup = this._commonGroups.pop();
+		this._headGroup.setLeader(false);
+		this._commonGroups.reverse();
+		this._commonGroups.push(oldHeaderGroup);
+		this._commonGroups.reverse();
+		this._headGroup.setPosition(0, this.getContentSize().height*2-0*this._groupHeight);
+		this.start();
+	}
 });
 
 /**
@@ -213,9 +254,15 @@ cc.w.view.SlotsNode = cc.Node.extend({
 		this._super();
 		this.setContentSize(size,height);
 		this.setAnchorPoint(0.5, 0.5);
-		
-//		cc.w.slots.ACTION_START = new cc.delayTime();
-	
+		this.setupView();
+	},
+	setupView:function(){
+		//init the actions //cc.delayTime(5);
+		var duration = 3;
+		cc.w.slots.ACTION_START = cc.moveBy(duration, cc.p(0, -cc.w.slots.GROUP_NODE_HEIGHT));
+		cc.w.slots.ACTION_STOP = cc.delayTime(5);
+		cc.w.slots.ACTION_CONSTANT = cc.delayTime(5);
+
 //		this.ignoreAnchorPointForPosition(false);
 		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
 		layer.setContentSize(this.getContentSize());
@@ -249,9 +296,10 @@ cc.w.view.SlotsNode = cc.Node.extend({
 		cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_CYCLED);
 	},
 	start:function(){
-		for ( var colNode in this._columnNodes) {
-			colNode.start();
+		for (var i = 0; i < this._columnNodes.length; i++) {
+			this._columnNodes[i].start(); 
 		}
+//			this._columnNodes[0].start(); 
 	},
 	stop:function(){
 		for ( var colNode in this._columnNodes) {
@@ -260,6 +308,7 @@ cc.w.view.SlotsNode = cc.Node.extend({
 	},
 	onEnter:function(){
 		this._super();
+		this.start();
 	},
 	onExit:function(){
 		this._super();
@@ -274,7 +323,7 @@ cc.w.view.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 		this.setupView();
 	},
 	setupView:function(){
-		this._super();
+//		cc.log("UsageLayerSlots setupView");
 		var slotsNode = new cc.w.view.SlotsNode(cc.winSize.width/10*8,cc.winSize.height/6);
 		slotsNode.setPosition(this.getContentSize().width/2, this.getContentSize().height/2);
 		this.addChild(slotsNode);

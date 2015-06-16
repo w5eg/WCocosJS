@@ -5,8 +5,9 @@
  */
 cc.w = cc.w||{};
 /**视图组件包名*/
-cc.w.view = cc.w.view||{};
-cc.w.layout = cc.w.layout||{};
+cc.w.view = {};
+cc.w.layout = {};
+
 cc.w.layout.testNode = function(node){
 	var nodeParent = node.getParent();
 	if(nodeParent&&node){
@@ -115,8 +116,8 @@ sin = function(d){
 cos = function(d){
 	return Math.cos(d);
 }
-cc.w.action = cc.w.action||{};
-cc.w.math = cc.w.math||{};
+cc.w.action = {};
+cc.w.math = {};
 cc.w.math.computeAngle = function(centerPoint,aroundPoint){
 	var p = cc.pSub(centerPoint, aroundPoint);
 //	cc.log("pSub x="+p.x +" y="+p.y);

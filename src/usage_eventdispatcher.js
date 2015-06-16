@@ -8,7 +8,6 @@ cc.w.usage.UsageLayerEventDispatcher = cc.w.view.UsageBaseLayer.extend({
 		this.setupView();
 	},
 	setupView:function(){
-		this._super();
 		var size = cc.winSize;
 		var item = new cc.MenuItemFont("PERFOM CUSTOM EVENT", this.performEventMenuItemCallback, this); 
 		item.attr({

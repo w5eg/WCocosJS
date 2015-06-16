@@ -1,4 +1,4 @@
-cc.w.usage = cc.w.usage||{};
+cc.w.usage = {};
 /**
  * 用例对象数组
  */
@@ -40,9 +40,9 @@ cc.w.view.UsageBaseLayer = cc.Layer.extend({
 	_className:"UsageBaseLayer",
 	ctor:function(){
 		this._super();
-		this.setupView();
+		this._setupView();
 	},
-	setupView:function(){
+	_setupView:function(){
 		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
 		this.addChild(layer);
 		var size = cc.winSize;
@@ -73,16 +73,18 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
 		this._super();
 		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
 		this.addChild(layer);
+		this.setupView();
 	},
 	onEnter:function(){
 		this._super();
-		this.setupView();
 	},
 	setupView:function(){
 		var sp = new cc.Sprite("res/HelloWorld.png");
-		sp.setAnchorPoint(0, 0);
-//		sp.setPosition(cc.winSize.width/2, cc.winSize.height/2);
-		sp.setPosition(20, cc.winSize.height-sp.getContentSize().height-20);
+//		sp.setAnchorPoint(0, 0);
+//		cc.log(cc.winSize.height);
+//		cc.log(cc.winSize.width);
+		sp.setPosition(cc.winSize.width/2, cc.winSize.height/2);
+//		sp.setPosition(20, cc.winSize.height-sp.getContentSize().height-20);
 //		sp.setOpacity(50)
 		this.addChild(sp);
 //		sp.setColor(cc.color(255, 255, 0, 255));
