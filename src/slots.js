@@ -1,4 +1,4 @@
-cc.w.slots = cc.w.slots||{};
+cc.w.slots = {};
 
 //老虎机状态
 cc.w.slots.STATE_STOPED = 0;
@@ -6,11 +6,24 @@ cc.w.slots.STATE_RUNNING = 1;
 cc.w.slots.STATE = cc.w.slots.STATE_STOPED;//0表示静止，1表示运行（当 STATE==0&&RESULT==NULL表示开始运行，STATE==0&&RESULT!=null表示结束运行）
 //老虎机结果
 cc.w.slots.RESULT = null;//
+cc.w.slots.CYCLE_COUNT = 0;
 cc.w.slots.EVENT_CYCLED = "cc.w.slots.EVENT_CYCLED";//老虎机运行一个循环事件
+cc.w.slots.EVENT_RESULT = "cc.w.slots.EVENT_RESULT";//老虎机停止并显示结果事件
 //动画
-cc.w.slots.ACTION_START = null;//开始运动动画
-cc.w.slots.ACTION_STOP = null;//停止运动动画
-cc.w.slots.ACTION_CONSTANT = null;//匀速运动动画
+cc.w.slots.actionStart = function(){
+//	var bounceDistance = 50;
+//	var bounceAction = cc.moveBy(2, cc.p(0, bounceDistance)).easing(cc.easeBackIn());
+	var bounceAction2 = cc.moveBy(0.5, cc.p(0, -cc.w.slots.GROUP_NODE_HEIGHT)).easing(cc.easeBackIn());
+//	var seq = cc.sequence(bounceAction2)
+//	return seq;
+	return bounceAction2;
+};//开始运动动画
+cc.w.slots.actionStop = function(){
+	return cc.moveBy(0.5, cc.p(0, -cc.w.slots.GROUP_NODE_HEIGHT)).easing(cc.easeBackOut());
+};//停止运动动画
+cc.w.slots.actionConstant = function(){
+	return cc.moveBy(0.2, cc.p(0, -cc.w.slots.GROUP_NODE_HEIGHT));
+};//匀速运动动画
 cc.w.slots.GROUP_NODE_HEIGHT = 0;
 /////////////////////////////////////////////////////////////////////////////////////
 /**
@@ -47,7 +60,7 @@ cc.w.view.SlotsCellGroupNode = cc.Node.extend({
 	_cellNodeTop:null,
 	_cellNodeCenter:null,
 	_cellNodeBottom:null,
-	_isLeader:false,//是否是头
+//	_isLeader:false,//是否是头
 	_testMode:true,
 	ctor:function(size,height){
 		this._super();
@@ -61,12 +74,12 @@ cc.w.view.SlotsCellGroupNode = cc.Node.extend({
 		
 		this.setupView();
 	},
-	setLeader:function(isLeader){
-		this._isLeader = isLeader;
-	},
-	isLeader:function(){
-		return this._isLeader;
-	},
+//	setLeader:function(isLeader){
+//		this._isLeader = isLeader;
+//	},
+//	isLeader:function(){
+//		return this._isLeader;
+//	},
 //	setOpacity:function(newValue){
 //		this._super(newValue);
 //		for ( var c in this.getChildren()) {
@@ -114,10 +127,13 @@ cc.w.view.SlotsCellGroupNode = cc.Node.extend({
 			this.addChild(cellNode);
 		}
 	},
-	updateView:function(result){
-		if (result==null) {
+	updateView:function(){
+		if (cc.w.slots.RESULT==null) {
 			return;
 		}
+		this._cellNodeTop.setVisible(false);
+		this._cellNodeCenter.setVisible(false);
+		this._cellNodeBottom.setVisible(false);
 	},
 });
 
@@ -131,6 +147,9 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 	_commonGroups:null,
 	_clippingNode:null,
 	_groupHeight:0,
+	_state:0,
+	_result:null,
+	_isFirstCol:false,
 	ctor:function(size,height){
 		this._super();
 		this.setContentSize(size,height);
@@ -145,6 +164,7 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 		this.setupView();
 	},
 	setupView:function(){
+		this.reset();
 		this._groups = new Array();
 		this._commonGroups = new Array();
 		//第一列有四个组。
@@ -156,10 +176,10 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 			Array.prototype.map;
 			var group = new cc.w.view.SlotsCellGroupNode(groupWidth,groupHeight);
 			if (i==0) {
-				group.setLeader(true);
+//				group.setLeader(true);
 				this._headGroup = group;
 			}else{
-				group.setLeader(false);
+//				group.setLeader(false);
 				this._commonGroups.push(group);
 			}
 			
@@ -177,7 +197,7 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 		}
 	},
 	updateView:function(){
-
+		this._commonGroups[0].updateView();
 	},
 	addClipedChild:function(child){
 		this._clippingNode.addChild(child);
@@ -204,16 +224,36 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 	},
 	reset:function(){
 		//设置数据为初始状态
+		this._cycleCount = 0;
+		this._result = null;
+		this._state = cc.w.slots.STATE_STOPED;
 	},
 	start:function(){
 		//TODO 根据当前状态和是否有结果来判断是否执行动画
-//		if (cc.w.slots.STATE == cc.w.slots.STATE_RUNNING) {
-//			return;
-//		}
-		cc.log("wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"+this._groups.length);
+		if (this._state == cc.w.slots.STATE_RUNNING&&this._result!=null) {
+			return;
+		}
+		if (cc.w.slots.CYCLE_COUNT!=0&&this._cycleCount>=cc.w.slots.CYCLE_COUNT) {
+			this._result = this;
+		}
+		if (cc.w.slots.CYCLE_COUNT==0&&cc.w.slots.RESULT!=null&&this.isFirstCol()) {
+			cc.w.slots.CYCLE_COUNT = this._cycleCount;
+			this._result = cc.w.slots.RESULT;
+		}
+//		cc.log("wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"+cc.w.slots.STATE);
 		for (var i = 0; i < this._groups.length; i++) {
 			var group = this._groups[i];
-			var action = cc.moveBy(0.2, cc.p(0, -cc.w.slots.GROUP_NODE_HEIGHT));
+			var action ;
+			if(this._state == cc.w.slots.STATE_STOPED){
+				action = cc.w.slots.actionStart();
+			}else{
+				if (this._result==null) {
+					action = cc.w.slots.actionConstant();
+				}else{
+					action = cc.w.slots.actionStop();
+					this.updateView();
+				}
+			}
 			if (group === this._headGroup) {
 				cc.log("group isLeader");
 				var callback = cc.callFunc(this.onCycled, this);
@@ -229,18 +269,30 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 		//强制停止动画，恢复到初始状态
 		this.reset();
 	},
+	_cycleCount:0,
 	onCycled:function(){
 		cc.log("wwwww")
+		this._cycleCount+=1;
+		if (this._state == cc.w.slots.STATE_STOPED) {
+			this._state = cc.w.slots.STATE_RUNNING;
+		}
+		cc.w.slots.STATE = this._state;
 		cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_CYCLED);
 		var oldHeaderGroup = this._headGroup;
-		oldHeaderGroup.setLeader(false);
+//		oldHeaderGroup.setLeader(false);
 		this._headGroup = this._commonGroups.pop();
-		this._headGroup.setLeader(false);
+//		this._headGroup.setLeader(false);
 		this._commonGroups.reverse();
 		this._commonGroups.push(oldHeaderGroup);
 		this._commonGroups.reverse();
 		this._headGroup.setPosition(0, this.getContentSize().height*2-0*this._groupHeight);
 		this.start();
+	},
+	setFirstCol:function(isFirstCol){
+		this._isFirstCol = isFirstCol;
+	},
+	isFirstCol:function(){
+		return this._isFirstCol;
 	}
 });
 
@@ -258,11 +310,6 @@ cc.w.view.SlotsNode = cc.Node.extend({
 	},
 	setupView:function(){
 		//init the actions //cc.delayTime(5);
-		var duration = 3;
-		cc.w.slots.ACTION_START = cc.moveBy(duration, cc.p(0, -cc.w.slots.GROUP_NODE_HEIGHT));
-		cc.w.slots.ACTION_STOP = cc.delayTime(5);
-		cc.w.slots.ACTION_CONSTANT = cc.delayTime(5);
-
 //		this.ignoreAnchorPointForPosition(false);
 		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
 		layer.setContentSize(this.getContentSize());
@@ -275,6 +322,9 @@ cc.w.view.SlotsNode = cc.Node.extend({
 		var columnNodeHeight = this.getContentSize().height;
 		for (var i = 0; i < 5; i++) {
 			var columnNode = new cc.w.view.SlotsColumnNode(columnNodeWidth,columnNodeHeight);
+			if (i==0) {
+				columnNode.setFirstCol(true);
+			}
 			columnNode.setPosition(columnNodeWidth*i, 0);
 			this.addChild(columnNode);
 			this._columnNodes.push(columnNode);
@@ -288,18 +338,38 @@ cc.w.view.SlotsNode = cc.Node.extend({
 				cc.log("cc.w.slots.EVENT_CYCLED!");
 			}
 		});
+		cc.eventManager.addCustomListener(cc.w.slots.EVENT_RESULT, function(event){ 
+			if(event!=null){
+				cc.w.slots.RESULT = this;
+			}
+		});
 	},
-	/**
-	 * 当一个SlotsColumnNode完成一次循环
-	 */
-	onCycled:function(){
-		cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_CYCLED);
+	reset:function(){
+		cc.w.slots.STATE = cc.w.slots.STATE_STOPED;
+		cc.w.slots.RESULT = null;
+		for (var i = 0; i < this._columnNodes.length; i++) {
+			var columnNode = this._columnNodes[i];
+			columnNode.reset();
+		}
 	},
 	start:function(){
+		this.reset();
+		cc.w.slots.CYCLE_COUNT = 0;
+		var delay = -0.5;
 		for (var i = 0; i < this._columnNodes.length; i++) {
-			this._columnNodes[i].start(); 
+//			delay += 0.5;
+			delay = i*0.2;
+			var delayTime = cc.delayTime(delay);
+			var callFunc = cc.callFunc(function(sender,data){
+				this._columnNodes[data].start();
+			},this,i);
+			var seq = cc.sequence(delayTime,callFunc)
+			this.runAction(seq);
 		}
-//			this._columnNodes[0].start(); 
+//			this._columnNodes[4].start(); 
+		this.scheduleOnce(function() {
+			cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_RESULT);
+		}, 3);
 	},
 	stop:function(){
 		for ( var colNode in this._columnNodes) {
@@ -309,6 +379,9 @@ cc.w.view.SlotsNode = cc.Node.extend({
 	onEnter:function(){
 		this._super();
 		this.start();
+		this.scheduleOnce(function() {
+			this.start();
+		}, 3+1+2);
 	},
 	onExit:function(){
 		this._super();
