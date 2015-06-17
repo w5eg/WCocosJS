@@ -4,6 +4,11 @@ cc.w.slots = {};
 cc.w.slots.STATE_STOPED = 0;//表示静止
 cc.w.slots.STATE_RUNNING = 1;//表示运行
 cc.w.slots.STATE = cc.w.slots.STATE_STOPED;
+//测试模式
+cc.w.slots.MODE_DEBUG = false;//
+cc.w.slots.MODE_DEBUG_SPEED = false;//
+cc.w.slots.MODE_DEBUG_SlotsCellGroupNode = false;//
+cc.w.slots.MODE_DEBUG_SlotsColumnNode = false;//
 //老虎机结果
 cc.w.slots.RESULT = null;//用于保存游戏结果数据，每次运行前会清除
 cc.w.slots.CYCLE_COUNT_MIN = 3;//最少要完成循滚动的次数
@@ -16,16 +21,19 @@ cc.w.slots.EVENT_STOPED = "cc.w.slots.EVENT_STOPED";//老虎机停止事件(所�
 cc.w.slots.actionStart = function(){
 //	var bounceDistance = 50;
 //	var bounceAction = cc.moveBy(2, cc.p(0, bounceDistance)).easing(cc.easeBackIn());
-	var bounceAction2 = cc.moveBy(0.5, cc.p(0, -cc.w.slots.GROUP_NODE_HEIGHT)).easing(cc.easeBackIn());
+	var duration = cc.w.slots.MODE_DEBUG_SPEED?0.5+5:0.5;
+	var bounceAction2 = cc.moveBy(duration, cc.p(0, -cc.w.slots.GROUP_NODE_HEIGHT)).easing(cc.easeBackIn());
 //	var seq = cc.sequence(bounceAction2)
 //	return seq;
 	return bounceAction2;
 };//开始运动动画
 cc.w.slots.actionStop = function(){
-	return cc.moveBy(0.5, cc.p(0, -cc.w.slots.GROUP_NODE_HEIGHT)).easing(cc.easeBackOut());
+	var duration = cc.w.slots.MODE_DEBUG_SPEED?0.5+5:0.5;
+	return cc.moveBy(duration, cc.p(0, -cc.w.slots.GROUP_NODE_HEIGHT)).easing(cc.easeBackOut());
 };//停止运动动画
 cc.w.slots.actionConstant = function(){
-	return cc.moveBy(0.2, cc.p(0, -cc.w.slots.GROUP_NODE_HEIGHT));
+	var duration = cc.w.slots.MODE_DEBUG_SPEED?0.2+1:0.2;
+	return cc.moveBy(duration, cc.p(0, -cc.w.slots.GROUP_NODE_HEIGHT));
 };//匀速运动动画
 cc.w.slots.GROUP_NODE_HEIGHT = 0;
 cc.w.slots.COLUMN_COUNT = 5;
@@ -41,7 +49,16 @@ cc.w.slots.SlotCell = cc.Class.extend({
  * 老虎机结果对象
  */
 cc.w.slots.Result = cc.Class.extend({
-	
+	_images:null,//结果图标集合，目前一共15个位置，共13种图片，ID为1-13
+	_lineAnimation:"0",//目前有25条线，"0"表示没有，当有动画时的数据为:线数据+连续数量，例如"x,x,x,x,x:3",前5个数字表线的位置，最后一个数字表示连了几个图标，
+	_bigAnimation:0,//大动画，根据当前得分倍数来处理，分6个阶段0为无动画1-5有不同的动画
+	_specialEffect:0,//0表示没有，1表示免费次数，2表示加血
+	setImages:function(images){
+		this._images = images;
+	},
+	getImages:function(){
+		return this._images;
+	}
 });
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -49,13 +66,44 @@ cc.w.slots.Result = cc.Class.extend({
  * 老虎机的格子，一个格子显示一个图案，有一定的分数
  */
 cc.w.view.SlotsCellNode = cc.Node.extend({
+	_imageSprite:null,
+	_clippingNode:null,
 	ctor:function(size,height){
 		this._super();
 		this.setContentSize(size,height);
 //		this.setAnchorPoint(0.5, 0.5);0
-		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
-		layer.setContentSize(this.getContentSize());
-		this.addChild(layer);
+//		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
+//		layer.setContentSize(this.getContentSize());
+//		this.addChild(layer);
+		this.setupView(size, height);
+	},
+	setupView:function(size, height){
+		this._clippingNode = new cc.ClippingNode(this.createRectStencil(size, height));
+		this._clippingNode.setInverted(false);
+		this.addChild(this._clippingNode);
+		
+		this._imageSprite = new cc.MenuItemSprite();
+		this._imageSprite.setContentSize(this.getContentSize());
+		this._clippingNode.addChild(this._imageSprite);
+		this.setImage("res/icon_1.png");
+	},
+	setImage:function(path){
+		var sp = new cc.Sprite(path);
+		if (this.getContentSize().width<sp.getContentSize().width) {
+			var scaleValue = this.getContentSize().width/sp.getContentSize().width;
+			sp.setScale(scaleValue, scaleValue);
+		}else{
+			sp.setPosition(this.getContentSize().width/2-sp.getContentSize().width/2, this.getContentSize().height/2-sp.getContentSize().height/2);
+		}
+		this._imageSprite.setNormalImage(sp);
+	},
+	createRectStencil:function(size,height){
+		//以四个点确定的形状作为模版。至少要三个点才能确定形状
+		var stencil = new cc.DrawNode();
+		var color = cc.color(255,255,255,255);
+		//宽度传0好像还是会有宽度？
+		stencil.drawRect(cc.p(0, 0), cc.p(size,height), color, 0.001, color);
+		return stencil;
 	},
 });
 /**
@@ -66,16 +114,15 @@ cc.w.view.SlotsCellGroupNode = cc.Node.extend({
 	_cellNodeCenter:null,
 	_cellNodeBottom:null,
 //	_isLeader:false,//是否是头
-	_testMode:true,
 	ctor:function(size,height){
 		this._super();
 		this.setContentSize(size,height);
 		cc.w.slots.GROUP_NODE_HEIGHT = height;
 //		this.setAnchorPoint(0.5, 0.5);0
-		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
+//		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
 //		layer.setOpacity(30);
-		layer.setContentSize(this.getContentSize());
-		this.addChild(layer);
+//		layer.setContentSize(this.getContentSize());
+//		this.addChild(layer);
 		
 		this.setupView();
 	},
@@ -101,7 +148,7 @@ cc.w.view.SlotsCellGroupNode = cc.Node.extend({
 			cellNode.setPosition(0, cellHeight*i)
 			if (i==2) {
 				this._cellNodeTop = cellNode;
-				if (this._testMode) {
+				if (cc.w.slots.MODE_DEBUG_SlotsCellGroupNode) {
 					var label = new cc.LabelTTF("TOP","Arial",fs);
 					label.setTag(1001);
 					label.setColor(cc.color(255, 255, 0, 255));
@@ -111,7 +158,7 @@ cc.w.view.SlotsCellGroupNode = cc.Node.extend({
 			}
 			if (i==1) {
 				this._cellNodeCenter = cellNode;
-				if (this._testMode) {
+				if (cc.w.slots.MODE_DEBUG_SlotsCellGroupNode) {
 					var label = new cc.LabelTTF("CENTER","Arial",fs);
 					label.setTag(1002);
 					label.setColor(cc.color(255, 255, 0, 255));
@@ -121,7 +168,7 @@ cc.w.view.SlotsCellGroupNode = cc.Node.extend({
 			}
 			if (i==0) {
 				this._cellNodeBottom = cellNode;
-				if (this._testMode) {
+				if (cc.w.slots.MODE_DEBUG_SlotsCellGroupNode) {
 					var label = new cc.LabelTTF("BOTTOM","Arial",fs);
 					label.setTag(1003);
 					label.setColor(cc.color(255, 255, 0, 255));
@@ -136,17 +183,21 @@ cc.w.view.SlotsCellGroupNode = cc.Node.extend({
 		if (cc.w.slots.RESULT==null) {
 			return;
 		}
-//		this._cellNodeTop.setVisible(false);
-//		this._cellNodeCenter.setVisible(false);
-//		this._cellNodeBottom.setVisible(false);
+		this._cellNodeTop.setImage("res/icon_1.png");
+		this._cellNodeCenter.setImage("res/icon_2.png");
+		this._cellNodeBottom.setImage("res/icon_3.png");
 	},
+	reset:function(){
+//		this._cellNodeTop.setVisible(true);
+//		this._cellNodeCenter.setVisible(true);
+//		this._cellNodeBottom.setVisible(true);
+	}
 });
 
 /**
  * 老虎机的五个竖列中的一个，里面存放四个CELL组（SlotsCellGroupNode）
  */
 cc.w.view.SlotsColumnNode = cc.Node.extend({
-	_testMode:true,
 	_groups:null,
 	_headGroup:null,
 	_commonGroups:null,
@@ -164,9 +215,9 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 		this._clippingNode.setInverted(false);
 		this.addChild(this._clippingNode);
 //		this.setAnchorPoint(0.5, 0.5);
-		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
-		layer.setContentSize(this.getContentSize());
-		this.addClipedChild(layer);
+//		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
+//		layer.setContentSize(this.getContentSize());
+//		this.addClipedChild(layer);
 		this.setupView();
 	},
 	setupView:function(){
@@ -192,7 +243,7 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 //			group.setOpacity(5);
 			group.setPosition(0, this.getContentSize().height*2-i*groupHeight);
 			this.addClipedChild(group);
-			if (this._testMode) {
+			if (cc.w.slots.MODE_DEBUG_SlotsColumnNode) {
 				var label = new cc.LabelTTF("Group"+i,"Arial",30);
 				label.setTag(1003);
 				label.setColor(cc.color(0, 255, 0, 255));
@@ -206,8 +257,11 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 		this._commonGroups[0].updateView();
 	},
 	addClipedChild:function(child){
-		this._clippingNode.addChild(child);
-//		this.addChild(child);
+		if (cc.w.slots.MODE_DEBUG) {
+			this.addChild(child);
+		}else{
+			this._clippingNode.addChild(child);
+		}
 	},
 	createRectStencil:function(size,height){
 		//以四个点确定的形状作为模版。至少要三个点才能确定形状
@@ -233,6 +287,9 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 		this._cycleCount = 0;
 		this._result = null;
 		this._state = cc.w.slots.STATE_STOPED;
+	},
+	resetCells:function(){
+		if(this._commonGroups!=null)this._commonGroups[1].reset();
 	},
 	start:function(){
 		//TODO 根据当前状态和是否有结果来判断是否执行动画
@@ -337,9 +394,9 @@ cc.w.view.SlotsNode = cc.Node.extend({
 	setupView:function(){
 		//init the actions //cc.delayTime(5);
 //		this.ignoreAnchorPointForPosition(false);
-		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
-		layer.setContentSize(this.getContentSize());
-		this.addChild(layer);
+//		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
+//		layer.setContentSize(this.getContentSize());
+//		this.addChild(layer);
 //		var sp = new cc.Sprite("res/CloseNormal.png");
 //		sp.setPosition(this.getContentSize().width/2, this.getContentSize().height/2);
 //		this.addChild(sp);
@@ -355,21 +412,18 @@ cc.w.view.SlotsNode = cc.Node.extend({
 			columnNode.setPosition(columnNodeWidth*i, 0);
 			this.addChild(columnNode);
 			this._columnNodes.push(columnNode);
-			var label = new cc.LabelTTF(""+i,"Arial",50);
-			label.setColor(cc.color(255, 0, 0, 255));
-			label.setPosition(columnNodeWidth/2, columnNodeHeight/2);
-			columnNode.addChild(label);
+			if (cc.w.slots.MODE_DEBUG) {
+				var label = new cc.LabelTTF(""+i,"Arial",50);
+				label.setColor(cc.color(255, 0, 0, 255));
+				label.setPosition(columnNodeWidth/2, columnNodeHeight/2);
+				columnNode.addChild(label);
+			}
 		}
 //		cc.eventManager.addCustomListener(cc.w.slots.EVENT_CYCLED, function(event){ 
 //			if(event!=null){
 //				cc.log("cc.w.slots.EVENT_CYCLED!");
 //			}
 //		});
-		cc.eventManager.addCustomListener(cc.w.slots.EVENT_START, function(event){ 
-			if(event!=null){
-				cc.log("cc.w.slots.EVENT_START!");
-			}
-		});
 		cc.eventManager.addCustomListener(cc.w.slots.EVENT_RESULT, function(event){ 
 			if(event!=null){
 				cc.w.slots.RESULT = this;
@@ -392,6 +446,17 @@ cc.w.view.SlotsNode = cc.Node.extend({
 			}
 		});    
 		cc.eventManager.addListener(event_stoped, this);
+		var event_start = cc.EventListener.create({
+			event: cc.EventListener.CUSTOM,
+			eventName: cc.w.slots.EVENT_START,
+			callback: function(event){
+				if (event!=null) {
+					var target = event.getCurrentTarget();
+					target.start();
+				}
+			}
+		});    
+		cc.eventManager.addListener(event_start, this);
 		this.reset();
 	},
 	reset:function(){
@@ -402,8 +467,15 @@ cc.w.view.SlotsNode = cc.Node.extend({
 			columnNode.reset();
 		}
 	},
+	resetCells:function(){
+		for (var i = 0; i < this._columnNodes.length; i++) {
+			var columnNode = this._columnNodes[i];
+			columnNode.resetCells();
+		}
+	},
 	start:function(){
 //		this.reset();
+		this.resetCells();
 		cc.w.slots.CYCLE_COUNT = 0;
 		cc.w.slots.STATE = cc.w.slots.STATE_RUNNING;
 		var delay = -0.5;
@@ -442,59 +514,3 @@ cc.w.view.SlotsNode = cc.Node.extend({
 	}
 });
 /////////////////////////////////////////////////////////////////////////////////////
-cc.w.view.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
-	_className:"UsageLayerSlots",
-	_slotsNode:null,
-	ctor:function(){
-		this._super();
-		this.setupView();
-	},
-	setupView:function(){
-//		cc.log("UsageLayerSlots setupView");
-		this._slotsNode = new cc.w.view.SlotsNode(cc.winSize.width/10*8,cc.winSize.height/3);
-		this._slotsNode.setPosition(this.getContentSize().width/2, this.getContentSize().height/2);
-		this.addChild(this._slotsNode);
-		
-//		var drawNode = new cc.DrawNode();
-//		var color = cc.color(255,255,255,255);
-//		var center = cc.p(this.getContentSize().width/2, this.getContentSize().height/2);
-//		var radius = this.getContentSize().width/5;
-//		drawNode.drawDot(center, radius, color) 
-//		this.addChild(drawNode);
-		
-//		var fontDef = new cc.FontDefinition(); 
-//		fontDef.fontName = "Arial"; 
-//		fontDef.fontSize = "60"; 
-//		var label = new cc.LabelTTF("wwwww",fontDef);
-		this.addTouchEventListenser();
-	},
-	onEnter:function(){
-		this._super();
-	},
-	startAction:function(){
-		cc.log("state==================="+cc.w.slots.STATE);
-		if (cc.w.slots.STATE==cc.w.slots.STATE_STOPED) {
-			this._slotsNode.start();
-		}else{
-			cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_RESULT);
-		}
-	},
-	addTouchEventListenser:function(){
-		var touchListener = cc.EventListener.create({
-			event: cc.EventListener.TOUCH_ONE_BY_ONE,
-			// When "swallow touches" is true, then returning 'true' from the onTouchBegan method will "swallow" the touch event, preventing other listeners from using it.
-			swallowTouches: true,
-			//onTouchBegan event callback function                      
-			onTouchBegan: function (touch, event) { 
-				var pos = touch.getLocation();
-				var target = event.getCurrentTarget();  
-				if ( cc.rectContainsPoint(target.getBoundingBox(),pos)) {
-					target.startAction();
-					return true;
-				}
-				return false;
-			},
-		});
-		cc.eventManager.addListener(touchListener,this);
-	}
-});

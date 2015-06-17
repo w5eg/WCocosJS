@@ -33,11 +33,25 @@ cc.w.usage.UsageLayerEventDispatcher = cc.w.view.UsageBaseLayer.extend({
 		});
 		cc.eventManager.addCustomListener(CUSTOM_EVENT_NAMES.TEST, this.testCustomEventCallback)
 //		cc.eventManager.removeCustomListeners(CUSTOM_EVENT_NAMES.TEST);
+		var event_start = cc.EventListener.create({
+			event: cc.EventListener.CUSTOM,
+			eventName: CUSTOM_EVENT_NAMES.TEST,
+			callback: function(event){
+				if (event!=null) {
+					var target = event.getCurrentTarget();
+					target.doSth("tagget event!!!!!!!!!!!!!!"+event.getUserData().data);
+				}
+			}
+		});    
+		cc.eventManager.addListener(event_start, this);
 	},
 	testCustomEventCallback:function(event){
 		if (event!=null&&event.getUserData()!=null) {
 			cc.log("###"+event.getEventName()+" userData:"+event.getUserData().data);
 		}
+	},
+	doSth:function(data){
+		cc.log(data);
 	},
 	performEventMenuItemCallback:function(){
 		cc.eventManager.dispatchCustomEvent(CUSTOM_EVENT_NAMES.TEST, {"data":"here we are!~"});

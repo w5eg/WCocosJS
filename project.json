@@ -15,6 +15,9 @@
         "src/man_animation.js",
         "src/other_animation.js",
         "src/w.js",
+        "src/notification/Notificationjs",
+        "src/notification/Observer.js",
+        "src/notification/ViewFacade.js",
         "src/usages.js",
         "src/usage_eventdispatcher.js",
         "src/slots.js"
