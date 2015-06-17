@@ -29,7 +29,11 @@ cc.w.usage.pushUsageScene = function(idx){
 	cc.LoaderScene.preload(res, function () {
 		var scene = usage.scene();
 		if (scene) {
-			cc.director.pushScene(new cc.TransitionProgressRadialCCW(0.5,scene));
+			cc.director.pushScene(
+//					new cc.TransitionProgressRadialCCW(0.55,
+							scene
+//							)
+					);
 		}
 	}, this);
 };
