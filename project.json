@@ -12,14 +12,16 @@
     "jsList":[
         "src/resource.js",
         "src/app.js",
+        "src/w.js",
         "src/man_animation.js",
         "src/other_animation.js",
-        "src/w.js",
-        "src/notification/Notificationjs",
+        "src/notification/Notification.js",
         "src/notification/Observer.js",
         "src/notification/ViewFacade.js",
+        "src/slots.js",
+        "src/slots_controller.js",
         "src/usages.js",
-        "src/usage_eventdispatcher.js",
-        "src/slots.js"
+        "src/usage_slots.js",
+        "src/usage_eventdispatcher.js"
     ]
 }

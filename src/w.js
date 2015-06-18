@@ -675,3 +675,16 @@ cc.w.DemoLayer = cc.Layer.extend({
 		this.addChild(menu, 1);
 	}
 });
+
+/**
+ * string to array
+ * @param {String} input
+ * @returns {Array} array
+ */
+cc.w.str2Array = function (str) {
+	var tmp = str.split(","), ar = [], i;
+	for (i = 0; i < tmp.length; i++) {
+		ar.push(parseInt(tmp[i]));
+    }
+    return ar;
+};
