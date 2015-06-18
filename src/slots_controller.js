@@ -2,19 +2,30 @@ cc.w.slots.SlotsController = cc.Class.extend({
 	_enable:true,
 	_actions:[
 	          cc.w.slots.EVENT_START,
-	          cc.w.slots.EVENT_RESULT
 	          ],
 	ctor:function(){
 		for (var i = 0; i < this._actions.length; i++) {
 			var action = this._actions[i];
 			ViewFacade.getInstance().addObserver(action, this);
 		}
+		var event_stoped = cc.EventListener.create({
+			event: cc.EventListener.CUSTOM,
+			eventName: cc.w.slots.EVENT_STOPED,
+			callback: function(event){
+				if (event!=null) {
+					ViewFacade.getInstance().notifyObserver(
+							new Notification(cc.w.slots.EVENT_STOPED,0));
+				}
+			}
+		});    
+		cc.eventManager.addListener(event_stoped, 1);
 	},
 	release:function(){
 		for (var i = 0; i < this._actions.length; i++) {
 			var action = this._actions[i];
 			ViewFacade.getInstance().removeObserver(action, this);
 		}
+		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_STOPED);
 	},
 	handleNotification: function(notification){
 		var notificationName = notification.notificationName;
@@ -49,9 +60,9 @@ cc.w.slots.SlotsController = cc.Class.extend({
 		cc.director.getScheduler().scheduleCallbackForTarget(this, function(){
 			cc.w.slots.RESULT = new cc.w.slots.Result();
 			var resultStr = 
-				"13,13,13,13,13,"+
-				"10,10,10,10,10,"+
-				"10,10,10,10,10";
+				"1,1,1,1,1,"+
+				"2,2,2,2,2,"+
+				"3,3,3,3,3";
 			var resultArray = cc.w.str2Array(resultStr);
 			cc.w.slots.RESULT.setImages(resultArray);
 			cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_RESULT);
