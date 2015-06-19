@@ -3,6 +3,21 @@ cc.w.slots = {};
 cc.w.slots.COLUMN_COUNT = 5;//一共多少列
 cc.w.slots.ROW_COUNT = 3;//一共多少行
 cc.w.slots.CELL_KIND_COUNT = 13;//图标种类数量
+cc.w.slots.CELL_IMAGES = [//图标所有种类的图片，目前有13种
+                          "res/icon_1.png",
+                          "res/icon_2.png",
+                          "res/icon_3.png",
+                          "res/icon_4.png",
+                          "res/icon_5.png",
+                          "res/icon_6.png",
+                          "res/icon_7.png",
+                          "res/icon_8.png",
+                          "res/icon_9.png",
+                          "res/icon_10.png",
+                          "res/icon_a1.png",
+                          "res/icon_a2.png",
+                          "res/icon_a3.png",
+                          ];
 //全局变量
 cc.w.slots.slotsCellNodes = [];//存放所有SlotsCellNode
 cc.w.slots.GROUP_NODE_HEIGHT = 0;
@@ -57,21 +72,6 @@ cc.w.slots.actionCellNode = function(){
 cc.w.slots.SlotCell = cc.Class.extend({
 	_imageId:null,
 });
-cc.w.slots.CELL_IMAGES = [
-                          "res/icon_1.png",
-                          "res/icon_2.png",
-                          "res/icon_3.png",
-                          "res/icon_4.png",
-                          "res/icon_5.png",
-                          "res/icon_6.png",
-                          "res/icon_7.png",
-                          "res/icon_8.png",
-                          "res/icon_9.png",
-                          "res/icon_10.png",
-                          "res/icon_a1.png",
-                          "res/icon_a2.png",
-                          "res/icon_a3.png",
-                          ];
 /**
  * 通过图片ID来得到本地图片保存的路径
  * 图片ID为整数 1-13
@@ -134,6 +134,7 @@ cc.w.view.SlotsCellNode = cc.Node.extend({
 		this.addChild(this._clippingNode);
 		
 		this._imageSprite = new cc.MenuItemSprite();
+		this._imageSprite.setAnchorPoint(0, 0);
 		this._imageSprite.setContentSize(this.getContentSize());
 		this._clippingNode.addChild(this._imageSprite);
 		this.setImage(cc.w.slots.getRandomImageId());
@@ -149,11 +150,10 @@ cc.w.view.SlotsCellNode = cc.Node.extend({
 		this._imageSprite.setNormalImage(sp);
 	},
 	createRectStencil:function(size,height){
-		//以四个点确定的形状作为模版。至少要三个点才能确定形状
 		var stencil = new cc.DrawNode();
-		var color = cc.color(255,255,255,255);
+		var color = cc.color(255,255,255,0);
 		//宽度传0好像还是会有宽度？
-		stencil.drawRect(cc.p(0, 0), cc.p(size,height), color, 0.001, color);
+		stencil.drawRect(cc.p(0, 0), cc.p(size,height), color, 0.00001, color);
 		return stencil;
 	},
 	getIndex:function(){
@@ -353,9 +353,9 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 	createRectStencil:function(size,height){
 		//以四个点确定的形状作为模版。至少要三个点才能确定形状
 		var stencil = new cc.DrawNode();
-		var color = cc.color(255,255,255,255);
+		var color = cc.color(255,255,255,0);
 		//宽度传0好像还是会有宽度？
-		stencil.drawRect(cc.p(0, 0), cc.p(size,height), color, 0.001, color);
+		stencil.drawRect(cc.p(0, 0), cc.p(size,height), color, 0.00001, color);
 //		var rectangle = [
 //		cc.p(0, 0),
 //		cc.p(this.getContentSize().width, 0),
