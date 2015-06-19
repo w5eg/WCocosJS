@@ -603,6 +603,9 @@ cc.w.view.SlotsNode = cc.Node.extend({
 	}
 });
 /////////////////////////////////////////////////////////////////////////////////////
+cc.w.slots.LinePoint = cc.Class.extend({
+	lineIds:null,
+});
 cc.w.view.LineCellNode = cc.Node.extend({
 });
 cc.w.view.LinesNode = cc.Node.extend({

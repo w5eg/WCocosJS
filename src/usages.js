@@ -57,6 +57,8 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
 		this._bgImage.runAction(cc.rotateBy(5, 0, 720));
 //		var a = cc.flipX(true);
 //		this._bgImage.runAction(a);;
+		var nums = [1,2,3];
+		cc.log(nums);
 	},
 	setupView:function(){
 		this._nodeGrid = new cc.NodeGrid();
