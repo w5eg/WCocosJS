@@ -351,11 +351,11 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 		}
 	},
 	createRectStencil:function(size,height){
-		//以四个点确定的形状作为模版。至少要三个点才能确定形状
 		var stencil = new cc.DrawNode();
 		var color = cc.color(255,255,255,0);
 		//宽度传0好像还是会有宽度？
 		stencil.drawRect(cc.p(0, 0), cc.p(size,height), color, 0.00001, color);
+		//以四个点确定的形状作为模版。至少要三个点才能确定形状
 //		var rectangle = [
 //		cc.p(0, 0),
 //		cc.p(this.getContentSize().width, 0),
