@@ -11,8 +11,9 @@ cc.w.view.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 		this._slotsNode = new cc.w.view.SlotsNode(cc.winSize.width/10*8,cc.winSize.height/3);
 		this._slotsNode.setPosition(this.getContentSize().width/2, this.getContentSize().height/2);
 		this.addChild(this._slotsNode);
-
+		
 		this._slotsController = new cc.w.slots.SlotsController();
+		this._slotsController.init();
 // var drawNode = new cc.DrawNode();
 // var color = cc.color(255,255,255,255);
 // var center = cc.p(this.getContentSize().width/2,

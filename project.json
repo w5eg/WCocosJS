@@ -20,8 +20,8 @@
         "src/notification/ViewFacade.js",
         "src/slots.js",
         "src/slots_controller.js",
-        "src/usages.js",
         "src/usage_slots.js",
-        "src/usage_eventdispatcher.js"
+        "src/usage_eventdispatcher.js",
+        "src/usages.js"
     ]
 }

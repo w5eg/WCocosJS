@@ -1,9 +1,14 @@
 cc.w.slots.SlotsController = cc.Class.extend({
 	_enable:true,
+	_inited:false,
 	_actions:[
 	          cc.w.slots.EVENT_START,
 	          ],
-	ctor:function(){
+	init:function(){
+		if (this._inited) {
+			return;
+		}
+		this._inited = true;
 		for (var i = 0; i < this._actions.length; i++) {
 			var action = this._actions[i];
 			ViewFacade.getInstance().addObserver(action, this);
@@ -15,6 +20,14 @@ cc.w.slots.SlotsController = cc.Class.extend({
 				if (event!=null) {
 					ViewFacade.getInstance().notifyObserver(
 							new Notification(cc.w.slots.EVENT_STOPED,0));
+					for (var i = 0; i < cc.w.slots.slotsCellNodes.length; i++) {
+						var cellNode = cc.w.slots.slotsCellNodes[i];
+//						cc.log(cellNode.getIndex());
+						cellNode.doCellAnimation();
+//						if (cellNode.getIndex()==13) {
+//							cellNode.setVisible(false);
+//						}
+					}
 				}
 			}
 		});    

@@ -1,4 +1,3 @@
-cc.w.usage = {};
 /**
  * 用例对象数组
  */
@@ -38,41 +37,12 @@ cc.w.usage.pushUsageScene = function(idx){
 	}, this);
 };
 /**
- * 用例页面基础页面，提供返回按钮和背景色
- */
-cc.w.view.UsageBaseLayer = cc.Layer.extend({
-	_className:"UsageBaseLayer",
-	ctor:function(){
-		this._super();
-		this._setupView();
-	},
-	_setupView:function(){
-		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
-		this.addChild(layer);
-		var size = cc.winSize;
-		var closeItem = new cc.MenuItemImage(
-				"res/CloseNormal.png",
-				"res/CloseSelected.png",
-				function () {
-					cc.director.popScene();
-				}, this);
-		closeItem.attr({
-			x: size.width-60,
-			y: 60,
-			anchorX: 0.5,
-			anchorY: 0.5
-		});
-		var menu = new cc.Menu(closeItem);
-		menu.x = 0;
-		menu.y = 0;
-		this.addChild(menu);
-	},
-});
-/**
  * 用例列表页面
  */
 cc.w.view.UsagesLayer = cc.Layer.extend({
 	_className :"UsagesLayer",
+	_nodeGrid:null,
+	_bgImage:null,
 	ctor:function(){
 		this._super();
 		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
@@ -81,16 +51,29 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
 	},
 	onEnter:function(){
 		this._super();
+//		this._nodeGrid.runAction(cc.flipX3D(5));
+//		this._nodeGrid.runAction(cc.flipY3D(5));
+//		this._nodeGrid.runAction(cc.pageTurn3D(3.0, cc.size(15, 10)));
+		this._bgImage.runAction(cc.rotateBy(5, 0, 720));
+//		var a = cc.flipX(true);
+//		this._bgImage.runAction(a);;
 	},
 	setupView:function(){
-		var sp = new cc.Sprite("res/HelloWorld.png");
+		this._nodeGrid = new cc.NodeGrid();
+//		this._nodeGrid.setContentSize(100,this.getContentSize().height);
+//		this._nodeGrid.setAnchorPoint(cc.p(0.5, 0.5));
+//		this._nodeGrid.setPosition(cc.winSize.width/2, cc.winSize.height/2);
+		this.addChild(this._nodeGrid);
+		this._bgImage = new cc.Sprite("res/HelloWorld.png");
 //		sp.setAnchorPoint(0, 0);
 //		cc.log(cc.winSize.height);
 //		cc.log(cc.winSize.width);
-		sp.setPosition(cc.winSize.width/2, cc.winSize.height/2);
+		this._bgImage.setPosition(cc.winSize.width/2, cc.winSize.height/2);
 //		sp.setPosition(20, cc.winSize.height-sp.getContentSize().height-20);
 //		sp.setOpacity(50)
-		this.addChild(sp);
+		this._nodeGrid.addChild(this._bgImage);
+		
+		
 //		sp.setColor(cc.color(255, 255, 0, 255));
 		var menuItems = new Array();
 //		cc.MenuItemFont.setFontName("Times New Roman");  

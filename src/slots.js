@@ -4,8 +4,7 @@ cc.w.slots.COLUMN_COUNT = 5;//一共多少列
 cc.w.slots.ROW_COUNT = 3;//一共多少行
 cc.w.slots.CELL_KIND_COUNT = 13;//图标种类数量
 //全局变量
-cc.w.slots.slotsCellNodes = [];
-cc.w.slots.slotsColumnNodes = null;
+cc.w.slots.slotsCellNodes = [];//存放所有SlotsCellNode
 cc.w.slots.GROUP_NODE_HEIGHT = 0;
 //老虎机状态
 cc.w.slots.STATE_STOPED = 0;//表示静止
@@ -45,7 +44,12 @@ cc.w.slots.actionConstant = function(){
 	var duration = cc.w.slots.MODE_DEBUG_SPEED?0.2+1:0.2;
 	return cc.moveBy(duration, cc.p(0, -cc.w.slots.GROUP_NODE_HEIGHT));
 };
-
+cc.w.slots.actionCellNode = function(){
+	var duration = 0.5; 
+	var a1 = cc.scaleTo(duration, 1.1);
+	var a2 = cc.scaleTo(duration, 1.0);;
+	return cc.repeatForever(cc.sequence(a1,a2));
+}
 /////////////////////////////////////////////////////////////////////////////////////
 /**
  * 老虎机一个CELL中的数据对象
@@ -107,7 +111,6 @@ cc.w.slots.Result = cc.Class.extend({
 		return this._images;
 	}
 });
-
 /////////////////////////////////////////////////////////////////////////////////////
 /**
  * 老虎机的格子，一个格子显示一个图案，有一定的分数
@@ -158,6 +161,12 @@ cc.w.view.SlotsCellNode = cc.Node.extend({
 	},
 	setIndex:function(index){
 		this._index = index;
+	},
+	doCellAnimation:function(){
+//		this.runAction(cc.w.slots.actionCellNode());
+	},
+	reset:function(){
+//		this.stopAllActions();
 	}
 });
 /**
@@ -210,7 +219,9 @@ cc.w.view.SlotsCellGroupNode = cc.Node.extend({
 			cellNode.setPosition(0, cellHeight*i)
 			if (i==2) {
 				this._cellNodeTop = cellNode;
-				this._cellNodeTop.setIndex(cc.w.slots.computeCellNodeIndex(this._colIndex, 0));
+				var index = cc.w.slots.computeCellNodeIndex(this._colIndex, 0);
+				this._cellNodeTop.setIndex(index);
+//				cc.w.slots.slotsCellNodes[index] = this._cellNodeTop;
 				if (cc.w.slots.MODE_DEBUG_SlotsCellGroupNode) {
 					var label = new cc.LabelTTF("TOP","Arial",fs);
 					label.setTag(1001);
@@ -221,7 +232,9 @@ cc.w.view.SlotsCellGroupNode = cc.Node.extend({
 			}
 			if (i==1) {
 				this._cellNodeCenter = cellNode;
-				this._cellNodeCenter.setIndex(cc.w.slots.computeCellNodeIndex(this._colIndex, 1))
+				var index = cc.w.slots.computeCellNodeIndex(this._colIndex, 1);
+				this._cellNodeCenter.setIndex(index)
+//				cc.w.slots.slotsCellNodes[index] = this._cellNodeCenter;
 				if (cc.w.slots.MODE_DEBUG_SlotsCellGroupNode) {
 					var label = new cc.LabelTTF("CENTER","Arial",fs);
 					label.setTag(1002);
@@ -232,7 +245,9 @@ cc.w.view.SlotsCellGroupNode = cc.Node.extend({
 			}
 			if (i==0) {
 				this._cellNodeBottom = cellNode;
-				this._cellNodeBottom.setIndex(cc.w.slots.computeCellNodeIndex(this._colIndex, 2))
+				var index = cc.w.slots.computeCellNodeIndex(this._colIndex, 2);
+				this._cellNodeBottom.setIndex(index)
+//				cc.w.slots.slotsCellNodes[index] = this._cellNodeBottom;
 				if (cc.w.slots.MODE_DEBUG_SlotsCellGroupNode) {
 					var label = new cc.LabelTTF("BOTTOM","Arial",fs);
 					label.setTag(1003);
@@ -251,10 +266,16 @@ cc.w.view.SlotsCellGroupNode = cc.Node.extend({
 		this._cellNodeTop.setImage(cc.w.slots.getCellImageById(cc.w.slots.RESULT.getImages()[this._cellNodeTop.getIndex()]));
 		this._cellNodeCenter.setImage(cc.w.slots.getCellImageById(cc.w.slots.RESULT.getImages()[this._cellNodeCenter.getIndex()]));
 		this._cellNodeBottom.setImage(cc.w.slots.getCellImageById(cc.w.slots.RESULT.getImages()[this._cellNodeBottom.getIndex()]));
+		cc.w.slots.slotsCellNodes[this._cellNodeTop.getIndex()] = this._cellNodeTop;
+		cc.w.slots.slotsCellNodes[this._cellNodeCenter.getIndex()] = this._cellNodeCenter;
+		cc.w.slots.slotsCellNodes[this._cellNodeBottom.getIndex()] = this._cellNodeBottom;
 		cc.log("=====update cell====="+this._colIndex);
 	},
 	reset:function(){
 		//TODO STH
+		this._cellNodeTop.reset();
+		this._cellNodeCenter.reset();
+		this._cellNodeBottom.reset();
 	}
 });
 

@@ -7,6 +7,7 @@ cc.w = cc.w||{};
 /**视图组件包名*/
 cc.w.view = {};
 cc.w.layout = {};
+cc.w.usage = {};
 
 cc.w.layout.testNode = function(node){
 	var nodeParent = node.getParent();
@@ -685,6 +686,37 @@ cc.w.str2Array = function (str) {
 	var tmp = str.split(","), ar = [], i;
 	for (i = 0; i < tmp.length; i++) {
 		ar.push(parseInt(tmp[i]));
-    }
-    return ar;
+	}
+	return ar;
 };
+/**
+ * 用例页面基础页面，提供返回按钮和背景色
+ */
+cc.w.view.UsageBaseLayer = cc.Layer.extend({
+	_className:"UsageBaseLayer",
+	ctor:function(){
+		this._super();
+		this._setupView();
+	},
+	_setupView:function(){
+		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
+		this.addChild(layer);
+		var size = cc.winSize;
+		var closeItem = new cc.MenuItemImage(
+				"res/CloseNormal.png",
+				"res/CloseSelected.png",
+				function () {
+					cc.director.popScene();
+				}, this);
+		closeItem.attr({
+			x: size.width-60,
+			y: 60,
+			anchorX: 0.5,
+			anchorY: 0.5
+		});
+		var menu = new cc.Menu(closeItem);
+		menu.x = 0;
+		menu.y = 0;
+		this.addChild(menu);
+	},
+});

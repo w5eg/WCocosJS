@@ -63,10 +63,10 @@ cc.game.onStart = function(){
 		jsb.fileUtils.setSearchPaths(searchPaths);
 	}	
     cc.view.adjustViewPort(true);
-    cc.view.setDesignResolutionSize(640,960, cc.ResolutionPolicy.FIXED_WIDTH);
+    cc.view.setDesignResolutionSize(640,960, cc.ResolutionPolicy.SHOW_ALL);
     cc.view.resizeWithBrowserSize(true);
     //load resources
-    cc.LoaderScene.preload(res, function () {
+    cc.LoaderScene.preload(res||g_resources, function () {
     	cc.director.runScene(new cc.w.Scene(new cc.w.view.UsagesLayer())); 
     }, this);
 };
