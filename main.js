@@ -48,25 +48,11 @@
  */
 
 cc.game.onStart = function(){
-	if (cc.sys.isNative === true) {
-		require('pomelo-cocos2d-js/index.js');
-		
-		var searchPaths = jsb.fileUtils.getSearchPaths();
-		searchPaths.push('src');
-		searchPaths.push('script');
-		var paths = [
-		             'res'
-		             ];
-		for (var i = 0; i < paths.length; i++) {
-			searchPaths.push(paths[i]);
-		}
-		jsb.fileUtils.setSearchPaths(searchPaths);
-	}	
     cc.view.adjustViewPort(true);
-    cc.view.setDesignResolutionSize(640,960, cc.ResolutionPolicy.SHOW_ALL);
+    cc.view.setDesignResolutionSize(960, 640, cc.ResolutionPolicy.SHOW_ALL);
     cc.view.resizeWithBrowserSize(true);
     //load resources
-    cc.LoaderScene.preload(res||g_resources, function () {
+    cc.LoaderScene.preload(g_resources, function () {
     	cc.director.runScene(new cc.w.Scene(new cc.w.view.UsagesLayer())); 
     }, this);
 };

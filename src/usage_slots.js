@@ -2,6 +2,7 @@ cc.w.view.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 	_className:"UsageLayerSlots",
 	_slotsNode:null,
 	_slotsController:null,
+	_testLayer:null,
 	ctor:function(){
 		this._super();
 		this.setupView();
@@ -14,6 +15,10 @@ cc.w.view.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 		
 		this._slotsController = new cc.w.slots.SlotsController();
 		this._slotsController.init();
+		
+//		this._testLayer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
+//		this._testLayer.setContentSize(this.getContentSize());
+//		this.addChild(this._testLayer);
 // var drawNode = new cc.DrawNode();
 // var color = cc.color(255,255,255,255);
 // var center = cc.p(this.getContentSize().width/2,
@@ -47,6 +52,7 @@ cc.w.view.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 		}else{
 		}
 	},
+	_mZOrder:-10,
 	addTouchEventListenser:function(){
 		var touchListener = cc.EventListener.create({
 			event: cc.EventListener.TOUCH_ONE_BY_ONE,
@@ -60,6 +66,9 @@ cc.w.view.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 				var target = event.getCurrentTarget();  
 				if ( cc.rectContainsPoint(target.getBoundingBox(),pos)) {
 					target.startAction();
+					
+//					target._mZOrder*=-1;
+//					target.reorderChild(target._testLayer, target._mZOrder)
 					return true;
 				}
 				return false;

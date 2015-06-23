@@ -82,7 +82,7 @@ cc.w.slots.SlotsController = cc.Class.extend({
 			//当真正请求数据时最后要调用这句来通知监听者们
 			ViewFacade.getInstance().notifyObserver(
 					new Notification(cc.w.slots.EVENT_RESULT,0));
-		}, 1, false, 0, false);
+		}, 0.2, false, 0, false);
 	},
 	setEnable:function(value){
 		this._enable = value;

@@ -3,6 +3,7 @@ cc.w.slots = {};
 cc.w.slots.COLUMN_COUNT = 5;//一共多少列
 cc.w.slots.ROW_COUNT = 3;//一共多少行
 cc.w.slots.CELL_KIND_COUNT = 13;//图标种类数量
+cc.w.slots.CYCLE_COUNT_MIN = 2;//最少要完成循滚动的次数,要求为偶数
 cc.w.slots.CELL_IMAGES = [//图标所有种类的图片，目前有13种
                           "res/icon_1.png",
                           "res/icon_2.png",
@@ -32,7 +33,6 @@ cc.w.slots.MODE_DEBUG_SlotsCellGroupNode = false;//
 cc.w.slots.MODE_DEBUG_SlotsColumnNode = false;//
 //老虎机结果
 cc.w.slots.RESULT = null;//用于保存游戏结果数据，每次运行前会清除
-cc.w.slots.CYCLE_COUNT_MIN = 3;//最少要完成循滚动的次数
 cc.w.slots.CYCLE_COUNT = 0;//当前（第一列）循环滚动的次数（后面的列也要完成同样次数才能停止）
 cc.w.slots.EVENT_START = "cc.w.slots.EVENT_START";//老虎机执行运行事件
 cc.w.slots.EVENT_CYCLED = "cc.w.slots.EVENT_CYCLED";//老虎机运行一个循环事件
@@ -101,7 +101,7 @@ cc.w.slots.computeCellNodeIndex = function(colIndex,groupCellIndex){
  */
 cc.w.slots.Result = cc.Class.extend({
 	_images:null,//结果图标集合，目前一共15个位置，共13种图片，ID为1-13
-	_lineAnimation:"0",//目前有25条线，"0"表示没有，当有动画时的数据为:线数据+连续数量，例如"x,x,x,x,x:3",前5个数字表线的位置，最后一个数字表示连了几个图标，
+	_lines:null,//目前有25条线，原始数据为字符串，"0"表示没有，当有动画时的数据为:线数据+连续数量，例如"x,x,x,x,x:3",前5个数字表线的位置，最后一个数字表示连了几个图标，
 	_bigAnimation:0,//大动画，根据当前得分倍数来处理，分6个阶段0为无动画1-5有不同的动画
 	_specialEffect:0,//0表示没有，1表示免费次数，2表示加血
 	setImages:function(images){
@@ -109,6 +109,61 @@ cc.w.slots.Result = cc.Class.extend({
 	},
 	getImages:function(){
 		return this._images;
+	}
+});
+/////////////////////////////////////////////////////////////////////////////////////
+/**
+ * 线对象
+ */
+cc.w.slots.Line = cc.Class.extend({
+	_len:2,//连了几个，最少两个
+	_linePints:null,//组成线的所有点
+	_color:null,//线的颜色
+});
+/**
+ * 组成线的点对象
+ */
+cc.w.slots.LinePoint = cc.Class.extend({
+	_lines:null,//这个连线的点所关联的线们，一或多个
+	_pos:0,//点在所有SlotsCellNode中的位置0-14，也就是SlotsCellNode的索引
+});
+//cc.w.view.LineCellNode = cc.Node.extend({
+//});
+/**
+ * 显示线的组件
+ */
+cc.w.slots.LinesNode = cc.Node.extend({//TODO
+	_lines:null,//cc.w.slots.Line的集合
+	ctor:function(size,height){
+		this._super();
+		this.setContentSize(size,height);
+//		this.setAnchorPoint(0.5, 0.5);
+		
+		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
+		layer.setContentSize(this.getContentSize());
+		this.addChild(layer);
+		
+		this.setupView();
+	},
+	setupView:function(){
+	},
+	updateView:function(){
+//		this.removeAllChildren();
+		if (cc.w.slots.RESULT==null||cc.w.slots.RESULT.lines) {
+			
+		}
+	},
+	reset:function(){
+	},
+	start:function(){
+	},
+	stop:function(){
+	},
+	onEnter:function(){
+		this._super();
+	},
+	onExit:function(){
+		this._super();
 	}
 });
 /////////////////////////////////////////////////////////////////////////////////////
@@ -374,6 +429,7 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 		this._cycleCount = 0;
 		this._result = null;
 		this._state = cc.w.slots.STATE_STOPED;
+		this.ajust();
 	},
 	resetCells:function(){
 		if(this._commonGroups!=null)this._commonGroups[1].reset();
@@ -394,14 +450,15 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 			cc.w.slots.CYCLE_COUNT = this._cycleCount;
 			this._result = cc.w.slots.RESULT;
 		}
+		
 //		cc.log("wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"+cc.w.slots.STATE);
 		this.ajust();
 		for (var i = 0; i < this._groups.length; i++) {
 			var group = this._groups[i];
 			var action ;
-			if(this._state == cc.w.slots.STATE_STOPED){
+			if(this._state == cc.w.slots.STATE_STOPED){//如果当前状态是停止，做开始动画
 				action = cc.w.slots.actionStart();
-			}else{
+			}else{//当前状态不是停止状态（也就是运行状态）时，如果有结果，执行停止动画，否则执行匀速动画
 				if (this._result==null) {
 					action = cc.w.slots.actionConstant();
 				}else{
@@ -425,9 +482,12 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 		this.reset();
 	},
 	/**
-	 * 因为动画使用的是moveBy,所以第一个循环做一次位置校正
+	 * 因为动画使用的是moveBy,所以第一个循环做一次位置校正 TO-DO:考虑使用moveTo,计算具体坐标，并传参数给动画方法
 	 */
 	ajust:function(){
+		if (this._commonGroups==null) {
+			return;
+		}
 		for (var i = 0; i < this._commonGroups.length; i++) {
 			var group = this._commonGroups[i];
 			group.setPosition(0, this.getContentSize().height-i*this._groupHeight);
@@ -470,13 +530,23 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
  * 老虎机,由五个SlotsColumnNode组成
  */
 //如果要做从左到右延时运行的效果，可以考虑是初始化SlotsColumnNode时加延时ACTION
-cc.w.view.SlotsNode = cc.Node.extend({
+cc.w.view.SlotsNode = cc.Node.extend({//TODO change cc.w.view to cc.w.slots
 	_columnNodes:null,
+	_linesNode:null,
 	ctor:function(size,height){
 		this._super();
 		this.setContentSize(size,height);
 		this.setAnchorPoint(0.5, 0.5);
 		this.setupView();
+		this.setupLinesNode(size, height);
+	},
+	setupLinesNode:function(width,height){
+		this._linesNode = new cc.w.slots.LinesNode(width,height);
+		this.addChild(this._linesNode);
+		this._linesNode.setLocalZOrder(-10);
+	},
+	updateView:function(){
+		this._linesNode.updateView();
 	},
 	setupView:function(){
 		//init the actions //cc.delayTime(5);
@@ -531,6 +601,7 @@ cc.w.view.SlotsNode = cc.Node.extend({
 				if (event!=null) {
 					var target = event.getCurrentTarget();
 					target.reset();
+					target.updateView();
 				}
 			}
 		});    
@@ -600,34 +671,5 @@ cc.w.view.SlotsNode = cc.Node.extend({
 		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_CYCLED);
 		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_START);
 		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_STOPED);
-	}
-});
-/////////////////////////////////////////////////////////////////////////////////////
-cc.w.slots.LinePoint = cc.Class.extend({
-	lineIds:null,
-});
-cc.w.view.LineCellNode = cc.Node.extend({
-});
-cc.w.view.LinesNode = cc.Node.extend({
-	_cellRects:null,//cc.rect集合，表示所有的块
-	ctor:function(size,height){
-		this._super();
-		this.setContentSize(size,height);
-		this.setAnchorPoint(0.5, 0.5);
-		this.setupView();
-	},
-	setupView:function(){
-	},
-	reset:function(){
-	},
-	start:function(){
-	},
-	stop:function(){
-	},
-	onEnter:function(){
-		this._super();
-	},
-	onExit:function(){
-		this._super();
 	}
 });
