@@ -124,8 +124,24 @@ cc.w.slots.Line = cc.Class.extend({
  * 组成线的点对象
  */
 cc.w.slots.LinePoint = cc.Class.extend({
+	_rect:null,
 	_lines:null,//这个连线的点所关联的线们，一或多个
 	_pos:0,//点在所有SlotsCellNode中的位置0-14，也就是SlotsCellNode的索引
+	_preOne:null,//当前点的前一个点
+	_nextOne:null,//当前点的后一个点
+	getPointOfLine:function(line){
+		if (this._lines==null||this._lines.length==0||this.rect==null) {
+			cc.w.log.e("cc.w.slots.LinePoint", "this._lines==null||this.rect==null");
+			return cc.p(0, 0);
+		}
+		var yOffset = 0;
+		if (this._lines.length>1) {
+			var index = this._lines.indexOf(line);
+			if (inex!=-1) {
+				
+			}
+		}
+	},
 });
 //cc.w.view.LineCellNode = cc.Node.extend({
 //});

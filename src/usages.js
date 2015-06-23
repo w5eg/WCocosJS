@@ -4,20 +4,25 @@
 cc.w.usage.usages = [
      {
     	 title:"EventDispatcher",
-    	 linksrc:"src/usage_eventdispatcher.js",
     	 resource:g_resources,
     	 scene:function () {
     		 return new cc.w.Scene(new cc.w.usage.UsageLayerEventDispatcher());
     	 }
      },
      {
-    	 title:"Slots",
-    	 linksrc:"src/slots.js",
+    	 title:"DrawNode",
     	 resource:g_resources,
     	 scene:function () {
-    		 return new cc.w.Scene(new cc.w.view.UsageLayerSlots());
+    		 return new cc.w.Scene(new cc.w.usage.UsageLayerDrawNode());
     	 }
-     }
+     },
+     {
+    	 title:"Slots",
+    	 resource:g_resources,
+    	 scene:function () {
+    		 return new cc.w.Scene(new cc.w.usage.UsageLayerSlots());
+    	 }
+     },
 ];
 /**
  * 打开一个用例页面
@@ -48,19 +53,33 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
 		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
 		this.addChild(layer);
 		this.setupView();
+		
+		var keyboardListener = cc.EventListener.create({
+			event: cc.EventListener.KEYBOARD,
+//			onKeyPressed:  function(keyCode, event){
+			onKeyReleased:  function(keyCode, event){
+				if(keyCode == cc.KEY.back){
+					cc.director.end();
+				}else if(keyCode == cc.KEY.home){
+					//do something
+				}
+			}
+		});
+		cc.eventManager.addListener(keyboardListener, this);
 	},
 	onEnter:function(){
 		this._super();
 //		this._nodeGrid.runAction(cc.flipX3D(5));
 //		this._nodeGrid.runAction(cc.flipY3D(5));
 //		this._nodeGrid.runAction(cc.pageTurn3D(3.0, cc.size(15, 10)));
-		this._bgImage.runAction(cc.rotateBy(5, 0, 720));
+//		this._bgImage.runAction(cc.rotateBy(5, 0, 720));
 //		var a = cc.flipX(true);
-//		this._bgImage.runAction(a);;
-		var nums = [1,2,3];
-		cc.log(nums);
+//		this._bgImage.runAction(a);
 	},
 	setupView:function(){
+		var nums = [1,2,3];
+		cc.log(nums);
+		cc.log(nums.indexOf(3));
 		this._nodeGrid = new cc.NodeGrid();
 //		this._nodeGrid.setContentSize(100,this.getContentSize().height);
 //		this._nodeGrid.setAnchorPoint(cc.p(0.5, 0.5));
@@ -85,13 +104,14 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
 			item.setFontSize(36);
 			item.setFontName("Times New Roman");
 			item.setTag(i);
-			menuItems.push(item)
+			menuItems.push(item);
 		}
 		var menu = new cc.Menu(menuItems);
 		menu.alignItemsVertically();
 		this.addChild(menu);
 	},
 	menuItemCallback:function (sender) {
+//		cc.director.end();
 		cc.w.usage.pushUsageScene(sender.getTag())
 	}, 
 });

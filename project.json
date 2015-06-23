@@ -23,6 +23,7 @@
         "src/slots_controller.js",
         "src/usage_slots.js",
         "src/usage_eventdispatcher.js",
+        "src/usage_drawnode.js",
         "src/usages.js"
     ]
 }

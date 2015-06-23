@@ -1,4 +1,4 @@
-cc.w.view.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
+cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 	_className:"UsageLayerSlots",
 	_slotsNode:null,
 	_slotsController:null,
