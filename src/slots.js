@@ -134,7 +134,7 @@ cc.w.slots.LinePoint = cc.Class.extend({
 			cc.w.log.e("cc.w.slots.LinePoint", "this._lines==null||this.rect==null");
 			return cc.p(0, 0);
 		}
-		var yOffset = 0;
+		var yOffset = 0;//TODO 设置offset时取线的OFFSET(线的是通过所有点的OFFSET中取最大的)
 		if (this._lines.length>1) {
 			var index = this._lines.indexOf(line);
 			if (inex!=-1) {
