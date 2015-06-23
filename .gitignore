@@ -26,7 +26,8 @@ $RECYCLE.BIN/
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
+
 
 # Thumbnails
 ._*
@@ -48,3 +49,4 @@ tools
 .cocos-project.json
 .project
 pomelo-cocos2d-js
+publish
