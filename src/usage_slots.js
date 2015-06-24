@@ -6,6 +6,35 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 	ctor:function(){
 		this._super();
 		this.setupView();
+		
+		var size = cc.winSize;
+		var item = new cc.MenuItemFont("draw line", this.drawLine, this); 
+		item.attr({
+			x:size.width/2,
+			y:150
+		})
+		item.setFontSize(46);
+		item.setFontName("Times New Roman");
+		var menu = new cc.Menu(item);
+		menu.x = 0;
+		menu.y = 0;
+		this.addChild(menu);
+	},
+	_lineIndex:0,
+	drawLine:function(){
+		if (cc.w.slots.RESULT==null||cc.w.slots.RESULT.getLines()==null||cc.w.slots.RESULT.getLines().length==0) {
+			return;
+		}
+		if (this._slotsNode!=null) {
+			var lineSize = cc.w.slots.RESULT.getLines().length;
+			ViewFacade.getInstance().notifyObserver(
+					new Notification(cc.w.slots.mappingAction(cc.w.slots.EVENT_SHOW_LINE),this._lineIndex));
+//			this._slotsNode.drawLine(this._lineIndex);
+			this._lineIndex++;
+			if (this._lineIndex>=lineSize) {
+				this._lineIndex = 0;
+			}
+		}
 	},
 	setupView:function(){
 // cc.log("UsageLayerSlots setupView");
@@ -48,7 +77,7 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 		cc.log("state==================="+cc.w.slots.STATE);
 		if (cc.w.slots.STATE==cc.w.slots.STATE_STOPED) {
 			ViewFacade.getInstance().notifyObserver(
-					new Notification(cc.w.slots.EVENT_START,0));
+					new Notification(cc.w.slots.mappingAction(cc.w.slots.EVENT_START,0)));
 		}else{
 		}
 	},

@@ -3,6 +3,15 @@ cc.w.usage.UsageLayerDrawNode = cc.w.view.UsageBaseLayer.extend({
 	ctor:function(){
 		this._super();
 		this.setupView();
+		var rect = cc.rect(0, 0, 50, 50);
+		cc.log(rect.x+" "+rect.y+" "+rect.width+" "+rect.height);
+		var nums = [1,2,3];
+		cc.log(nums);
+		cc.log(nums.indexOf(3));
+		cc.log(nums.indexOf(100));//可用于判断是否包含
+		var array = "1,2,3,4,5:3".split(":")[0].split(",");
+		array.push("abc")
+		cc.log(array);
 	},
 	setupView:function(){
 		var draw = new cc.DrawNode();

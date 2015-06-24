@@ -54,7 +54,8 @@ cc.w.usage.UsageLayerEventDispatcher = cc.w.view.UsageBaseLayer.extend({
 		cc.log(data);
 	},
 	performEventMenuItemCallback:function(){
-		cc.eventManager.dispatchCustomEvent(CUSTOM_EVENT_NAMES.TEST, {"data":"here we are!~"});
+//		cc.eventManager.dispatchCustomEvent(CUSTOM_EVENT_NAMES.TEST, {"data":"here we are!~"});
+		cc.eventManager.dispatchCustomEvent(CUSTOM_EVENT_NAMES.TEST, {"data":1});
 	},
 	onExit:function(){
 		this._super();

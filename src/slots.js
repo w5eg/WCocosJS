@@ -20,8 +20,9 @@ cc.w.slots.CELL_IMAGES = [//图标所有种类的图片，目前有13种
                           "res/icon_a3.png",
                           ];
 //全局变量
-cc.w.slots.slotsCellNodes = [];//存放所有SlotsCellNode
+cc.w.slots.SLOTS_CELL_NODES = [];//存放所有SlotsCellNode
 cc.w.slots.GROUP_NODE_HEIGHT = 0;
+cc.w.slots.LINE_POINTS = null;//存放所有画线的点。在初始化老虎机是初始化
 //老虎机状态
 cc.w.slots.STATE_STOPED = 0;//表示静止
 cc.w.slots.STATE_RUNNING = 1;//表示运行
@@ -34,10 +35,14 @@ cc.w.slots.MODE_DEBUG_SlotsColumnNode = false;//
 //老虎机结果
 cc.w.slots.RESULT = null;//用于保存游戏结果数据，每次运行前会清除
 cc.w.slots.CYCLE_COUNT = 0;//当前（第一列）循环滚动的次数（后面的列也要完成同样次数才能停止）
+//监听的事件
 cc.w.slots.EVENT_START = "cc.w.slots.EVENT_START";//老虎机执行运行事件
-cc.w.slots.EVENT_CYCLED = "cc.w.slots.EVENT_CYCLED";//老虎机运行一个循环事件
+cc.w.slots.EVENT_SHOW_LINE = "cc.w.slots.EVENT_SHOW_LINE";//老虎机执行显示线事件
 cc.w.slots.EVENT_RESULT = "cc.w.slots.EVENT_RESULT";//通知老虎机已经有结果，这时机器会自动判断并停止
+//发出的事件
+cc.w.slots.EVENT_CYCLED = "cc.w.slots.EVENT_CYCLED";//老虎机运行一个循环事件
 cc.w.slots.EVENT_STOPED = "cc.w.slots.EVENT_STOPED";//老虎机停止事件(所有列表都停止后调用)
+cc.w.slots.EVENT_LINE_SHOWN = "cc.w.slots.EVENT_LINE_SHOWN";//老虎机画一条线并播放线动画结束事件
 //动画
 /**开始运动动画*/
 cc.w.slots.actionStart = function(){
@@ -64,7 +69,7 @@ cc.w.slots.actionCellNode = function(){
 	var a1 = cc.scaleTo(duration, 1.1);
 	var a2 = cc.scaleTo(duration, 1.0);;
 	return cc.repeatForever(cc.sequence(a1,a2));
-}
+};
 /////////////////////////////////////////////////////////////////////////////////////
 /**
  * 老虎机一个CELL中的数据对象
@@ -85,7 +90,7 @@ cc.w.slots.getCellImageById = function(imageId){
 };
 cc.w.slots.getRandomImageId = function(){
 	return cc.w.slots.getCellImageById(Math.ceil(cc.random0To1()*cc.w.slots.CELL_KIND_COUNT));
-}
+};
 /**
  * 计算SlotsCellNode的索引
  * colIndex SlotsCellNode所有列索引
@@ -95,30 +100,32 @@ cc.w.slots.computeCellNodeIndex = function(colIndex,groupCellIndex){
 	var index = groupCellIndex*cc.w.slots.COLUMN_COUNT+colIndex;
 //	cc.log("CELL_INDEX = "+index + "(colIndex="+colIndex+" groupCellIndex="+groupCellIndex+")");
 	return index;
-}
-/**
- * 老虎机结果对象
- */
-cc.w.slots.Result = cc.Class.extend({
-	_images:null,//结果图标集合，目前一共15个位置，共13种图片，ID为1-13
-	_lines:null,//目前有25条线，原始数据为字符串，"0"表示没有，当有动画时的数据为:线数据+连续数量，例如"x,x,x,x,x:3",前5个数字表线的位置，最后一个数字表示连了几个图标，
-	_bigAnimation:0,//大动画，根据当前得分倍数来处理，分6个阶段0为无动画1-5有不同的动画
-	_specialEffect:0,//0表示没有，1表示免费次数，2表示加血
-	setImages:function(images){
-		this._images = images;
-	},
-	getImages:function(){
-		return this._images;
-	}
-});
+};
 /////////////////////////////////////////////////////////////////////////////////////
 /**
  * 线对象
  */
 cc.w.slots.Line = cc.Class.extend({
-	_len:2,//连了几个，最少两个
+	len:2,//连了几个，最少两个
 	_linePints:null,//组成线的所有点
-	_color:null,//线的颜色
+	color:null,//线的颜色
+	_bigAnimation:0,//大动画，根据当前得分倍数来处理，分6个阶段0为无动画1-5有不同的动画
+	specialEffect:0,//0表示没有，1表示免费次数，2表示加血
+	toString:function(){
+		return "\n(Line){len="+this.len
+//		+";linePints=\n"+this._linePints
+		+";specialEffect=\n"+this.specialEffect
+		+"}"
+	},
+	getPoints:function(){
+		return this._linePints;
+	},
+	addPoint:function(linePoint){
+		if (this._linePints==null) {
+			this._linePints = new Array();
+		}
+		this._linePints.push(linePoint);
+	}
 });
 /**
  * 组成线的点对象
@@ -126,54 +133,258 @@ cc.w.slots.Line = cc.Class.extend({
 cc.w.slots.LinePoint = cc.Class.extend({
 	_rect:null,
 	_lines:null,//这个连线的点所关联的线们，一或多个
-	_pos:0,//点在所有SlotsCellNode中的位置0-14，也就是SlotsCellNode的索引
-	_preOne:null,//当前点的前一个点
-	_nextOne:null,//当前点的后一个点
-	getPointOfLine:function(line){
-		if (this._lines==null||this._lines.length==0||this.rect==null) {
+	index:0,//点在所有SlotsCellNode中的位置0-14，也就是SlotsCellNode的索引
+	preOne:null,//当前点的前一个点
+	nextOne:null,//当前点的后一个点
+	setRect:function(rect){
+		this._rect = rect;
+	},
+	getRect:function(){
+		return this._rect;
+	},
+	reset:function(){
+		this._rect = null;
+		this._lines = null;
+		this.preOne = null;
+		this.nextOne = null;
+	},
+	toString:function(){
+		return "\n(LinePoint)" +
+				"{index="+this.index+";rect="+this._rect
+				+";lines:"+(this._lines==null?0:this._lines.length)
+				+"}"
+	},
+	relateToLine:function(line){
+		if (this._lines==null) {
+			this._lines = new Array();
+		}else if(this._lines.indexOf(line)!=-1){
+			return;
+		}
+		this._lines.push(line);
+	},
+	/**
+	 * 根据当前传入的线和矩形来计算点的坐标
+	 */
+	computePointOfLine:function(line){
+		if (this._lines==null||this._lines.length==0||this._rect==null) {
 			cc.w.log.e("cc.w.slots.LinePoint", "this._lines==null||this.rect==null");
 			return cc.p(0, 0);
 		}
-		var yOffset = 0;//TODO 设置offset时取线的OFFSET(线的是通过所有点的OFFSET中取最大的)
-		if (this._lines.length>1) {
-			var index = this._lines.indexOf(line);
-			if (inex!=-1) {
-				
+		var posX = this._rect.x + this._rect.width/2;
+		var posY = this._rect.y - this._rect.height/2;
+		
+		var points = new Array();
+		var centerPoint = cc.p(posX,posY);
+		
+		
+		if (this.preOne==null&&this.nextOne!=null) {
+			posX = this._rect.x;
+			points.push(cc.p(posX, posY));
+		}
+		
+		points.push(centerPoint);
+		
+		if (this.preOne!=null&&this.nextOne==null) {
+			posX = this._rect.x + this._rect.width;
+			points.push(cc.p(posX, posY));
+		}
+		
+//		var linesCount = this._lines.length;
+//		var index = this._lines.indexOf(line);
+//		
+//		if (index!=-1) {
+//			var top = this._rect.y;//+this._rect.height;
+//			poxY = top - (index)*( this._rect.height/(linesCount+1) );
+//		}
+		
+		
+		return points;
+	},
+});
+/**
+ * 老虎机结果对象
+ */
+cc.w.slots.Result = cc.Class.extend({
+	_images:null,//结果图标集合，目前一共15个位置，共13种图片，ID为1-13
+	_lines:null,//线动画+特效的数据组合在一起就是"x,x,x,x,x:y:z",x表线的位置，y表示连了几个图标,z为特效ID
+	/**
+	 * 因为要计算点与线的关联，所以点被定义为全局变量，用完后要还原
+	 */
+	reset:function(){
+		if (this._lines==null){
+			return;
+		}
+		for (var i = 0; i < this._lines.length; i++){
+			var line = this._lines[i];
+			var lps = line.getPoints();
+			if (lps!=null) {
+				for (var j = 0; j < lps.length; j++){
+					var lp = lps[j];
+					lp.reset();
+				}
 			}
 		}
 	},
+	setImages:function(images){
+		this._images = images;
+	},
+	setImagesData:function(data){
+		var resultArray = data.split(",");
+		this.setImages(resultArray);
+	},
+	getImages:function(){
+		return this._images;
+	},
+	setLinesData:function(data){
+		if (data==null||data.length==0) {
+			return;
+		}
+		
+		this._lines = new Array();
+		
+		for (var lineIndex = 0; lineIndex < data.length; lineIndex++) {
+			var lineData = data[lineIndex];
+			var lineDataArray = lineData.split(":");
+			if (lineDataArray.length==3) {
+				var line = new cc.w.slots.Line();
+				var linePointIndexs = lineDataArray[0].split(",");
+				var lineLen = lineDataArray[1];
+				var specialEffect = lineDataArray[2];
+				line.len = lineLen;
+				line.specialEffect = specialEffect;
+				var prePoint = null
+				for (var i = 0; i < linePointIndexs.length; i++) {
+					var idx = linePointIndexs[i];
+					var point = cc.w.slots.LINE_POINTS[idx];
+					line.addPoint(point);
+					point.relateToLine(line);
+					point.preOne = prePoint;
+					if (prePoint!=null) {
+						prePoint.nextOne = point;
+					}
+					prePoint = point;
+				}
+				this._lines.push(line);
+			}else{
+				cc.w.log.e("cc.w.slots.Result", "老虎机结果数据解析错误")
+			}
+//			cc.log("cc.w.slots.Result.getLines"+this.getLines());
+//			cc.log("cc.w.slots.LINE_POINTS"+cc.w.slots.LINE_POINTS);
+		}
+	},
+	getLines:function(){
+		return this._lines;
+	}
 });
+/////////////////////////////////////////////////////////////////////////////////////
 //cc.w.view.LineCellNode = cc.Node.extend({
 //});
 /**
  * 显示线的组件
  */
 cc.w.slots.LinesNode = cc.Node.extend({//TODO
-	_lines:null,//cc.w.slots.Line的集合
+	_cellRectWidth:0,//每个格子的宽
+	_cellRectHeight:0,//每个格子的高
+	_clippingNode:null,
+	_drawNode:null,
 	ctor:function(size,height){
 		this._super();
 		this.setContentSize(size,height);
 //		this.setAnchorPoint(0.5, 0.5);
 		
-		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
-		layer.setContentSize(this.getContentSize());
-		this.addChild(layer);
+//		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
+//		layer.setContentSize(this.getContentSize());
+//		this.addChild(layer);
+//		layer.setOpacity(150);
+		
+		this._clippingNode = new cc.ClippingNode(this.createRectStencil(size, height));
+		this._clippingNode.setInverted(false);
+		this.addChild(this._clippingNode);
 		
 		this.setupView();
+//		this.updateView();
 	},
 	setupView:function(){
+		
+		this._drawNode = new cc.DrawNode();
+		this._clippingNode.addChild(this._drawNode, 1);
+		if (cc.w.slots.LINE_POINTS==null) {
+			cc.w.slots.LINE_POINTS = new Array();
+			for (var i = 0; i < cc.w.slots.COLUMN_COUNT*cc.w.slots.ROW_COUNT; i++) {
+				var linePoint = new cc.w.slots.LinePoint();
+				linePoint.index = i;
+				cc.w.slots.LINE_POINTS[i] = linePoint;
+			}
+		}
+//		cc.log("cc.w.slots.LINE_POINTS = "+cc.w.slots.LINE_POINTS);
 	},
 	updateView:function(){
 //		this.removeAllChildren();
-		if (cc.w.slots.RESULT==null||cc.w.slots.RESULT.lines) {
-			
+		if (cc.w.slots.RESULT==null||cc.w.slots.RESULT.getLines()==null) {
+			return;
+		}
+		var width = this.getContentSize().width;
+		var height = this.getContentSize().height;
+		this._cellRectWidth = width/cc.w.slots.COLUMN_COUNT;
+		this._cellRectHeight = height/cc.w.slots.ROW_COUNT;
+		var totalCount = cc.w.slots.LINE_POINTS.length;
+		for (var i = 0; i < totalCount; i++) {
+			var linePoint = cc.w.slots.LINE_POINTS[i];
+			var col = i%cc.w.slots.COLUMN_COUNT;
+			var row = Math.floor(i/5);
+			var x = col*this._cellRectWidth;
+			var y = height-row*this._cellRectHeight;
+			var rect = cc.rect(x, y, this._cellRectWidth, this._cellRectHeight);
+			linePoint.setRect(rect);
+//			cc.log("######@@@@###### "+rect.x+"  "+rect.y);
+//			cc.log("######@@@@###### "+row+"  "+col);
+//			cc.log("######@@@@###### "+(row*cc.w.slots.COLUMN_COUNT+col));
 		}
 	},
 	reset:function(){
+		this._drawNode.clear();
 	},
-	start:function(){
+	drawLine:function(lineIndex){
+		this._drawNode.clear();
+		if (cc.w.slots.RESULT==null||cc.w.slots.RESULT.getLines()==null||cc.w.slots.RESULT.getLines().length<lineIndex) {
+			return;
+		}
+		var line = cc.w.slots.RESULT.getLines()[lineIndex];
+		if (line.getPoints()==null||line.getPoints().length==0) {
+			return;
+		}
+		var positions = new Array();
+		var lineSize = 16;
+		for (var i = 0; i < line.getPoints().length; i++) {
+			var point = line.getPoints()[i];
+			//TEST
+			var pos = 
+//				cc.p(point.getRect().x,point.getRect().y);
+				point.computePointOfLine(line);
+			for (var posIndex = 0; posIndex < pos.length; posIndex++) {
+				positions.push(pos[posIndex]);
+			}
+//			this._drawNode.drawDot(pos, 5, cc.color(0, 0, 255, 128));
+			//END TEST
+			//TODO 转化linePoint to cc.p()数组，并画线
+		}
+//		this._drawNode.drawCardinalSpline(positions, 1, 100, lineSize, cc.color(255, 255, 255, 255));
+		this._drawNode.drawCardinalSpline(positions, 1, 100, lineSize*0.5, cc.color(255, 0, 255, 255*0.7));
+		
+		var action1 = cc.blink(1.5, 4);
+		var callback = cc.callFunc(this.onLineShown, this);
+		var seq = cc.sequence(action1,callback);
+		this._drawNode.runAction(seq);
 	},
-	stop:function(){
+	onLineShown:function(){
+		cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_LINE_SHOWN);
+	},
+	createRectStencil:function(size,height){
+		var stencil = new cc.DrawNode();
+		var color = cc.color(255,255,255,0);
+		//宽度传0好像还是会有宽度？
+		stencil.drawRect(cc.p(0, 0), cc.p(size,height), color, 0.00001, color);
+		return stencil;
 	},
 	onEnter:function(){
 		this._super();
@@ -292,7 +503,7 @@ cc.w.view.SlotsCellGroupNode = cc.Node.extend({
 				this._cellNodeTop = cellNode;
 				var index = cc.w.slots.computeCellNodeIndex(this._colIndex, 0);
 				this._cellNodeTop.setIndex(index);
-//				cc.w.slots.slotsCellNodes[index] = this._cellNodeTop;
+//				cc.w.slots.SLOTS_CELL_NODES[index] = this._cellNodeTop;
 				if (cc.w.slots.MODE_DEBUG_SlotsCellGroupNode) {
 					var label = new cc.LabelTTF("TOP","Arial",fs);
 					label.setTag(1001);
@@ -305,7 +516,7 @@ cc.w.view.SlotsCellGroupNode = cc.Node.extend({
 				this._cellNodeCenter = cellNode;
 				var index = cc.w.slots.computeCellNodeIndex(this._colIndex, 1);
 				this._cellNodeCenter.setIndex(index)
-//				cc.w.slots.slotsCellNodes[index] = this._cellNodeCenter;
+//				cc.w.slots.SLOTS_CELL_NODES[index] = this._cellNodeCenter;
 				if (cc.w.slots.MODE_DEBUG_SlotsCellGroupNode) {
 					var label = new cc.LabelTTF("CENTER","Arial",fs);
 					label.setTag(1002);
@@ -318,7 +529,7 @@ cc.w.view.SlotsCellGroupNode = cc.Node.extend({
 				this._cellNodeBottom = cellNode;
 				var index = cc.w.slots.computeCellNodeIndex(this._colIndex, 2);
 				this._cellNodeBottom.setIndex(index)
-//				cc.w.slots.slotsCellNodes[index] = this._cellNodeBottom;
+//				cc.w.slots.SLOTS_CELL_NODES[index] = this._cellNodeBottom;
 				if (cc.w.slots.MODE_DEBUG_SlotsCellGroupNode) {
 					var label = new cc.LabelTTF("BOTTOM","Arial",fs);
 					label.setTag(1003);
@@ -337,9 +548,9 @@ cc.w.view.SlotsCellGroupNode = cc.Node.extend({
 		this._cellNodeTop.setImage(cc.w.slots.getCellImageById(cc.w.slots.RESULT.getImages()[this._cellNodeTop.getIndex()]));
 		this._cellNodeCenter.setImage(cc.w.slots.getCellImageById(cc.w.slots.RESULT.getImages()[this._cellNodeCenter.getIndex()]));
 		this._cellNodeBottom.setImage(cc.w.slots.getCellImageById(cc.w.slots.RESULT.getImages()[this._cellNodeBottom.getIndex()]));
-		cc.w.slots.slotsCellNodes[this._cellNodeTop.getIndex()] = this._cellNodeTop;
-		cc.w.slots.slotsCellNodes[this._cellNodeCenter.getIndex()] = this._cellNodeCenter;
-		cc.w.slots.slotsCellNodes[this._cellNodeBottom.getIndex()] = this._cellNodeBottom;
+		cc.w.slots.SLOTS_CELL_NODES[this._cellNodeTop.getIndex()] = this._cellNodeTop;
+		cc.w.slots.SLOTS_CELL_NODES[this._cellNodeCenter.getIndex()] = this._cellNodeCenter;
+		cc.w.slots.SLOTS_CELL_NODES[this._cellNodeBottom.getIndex()] = this._cellNodeBottom;
 		cc.log("=====update cell====="+this._colIndex);
 	},
 	reset:function(){
@@ -559,10 +770,13 @@ cc.w.view.SlotsNode = cc.Node.extend({//TODO change cc.w.view to cc.w.slots
 	setupLinesNode:function(width,height){
 		this._linesNode = new cc.w.slots.LinesNode(width,height);
 		this.addChild(this._linesNode);
-		this._linesNode.setLocalZOrder(-10);
+		this._linesNode.setLocalZOrder(10);
 	},
 	updateView:function(){
-		this._linesNode.updateView();
+		if(this._linesNode!=null)this._linesNode.updateView();
+	},
+	drawLine:function(lineIndex){
+		if(this._linesNode!=null)this._linesNode.drawLine(lineIndex);
 	},
 	setupView:function(){
 		//init the actions //cc.delayTime(5);
@@ -616,31 +830,53 @@ cc.w.view.SlotsNode = cc.Node.extend({//TODO change cc.w.view to cc.w.slots
 			callback: function(event){
 				if (event!=null) {
 					var target = event.getCurrentTarget();
-					target.reset();
+					cc.w.slots.STATE = cc.w.slots.STATE_STOPED;
 					target.updateView();
 				}
 			}
 		});    
 		cc.eventManager.addListener(event_stoped, this);
+		//--------------
 		var event_start = cc.EventListener.create({
 			event: cc.EventListener.CUSTOM,
 			eventName: cc.w.slots.EVENT_START,
 			callback: function(event){
 				if (event!=null) {
 					var target = event.getCurrentTarget();
+					target.reset();
 					target.start();
 				}
 			}
 		});    
 		cc.eventManager.addListener(event_start, this);
+		//-----------------
+		var event_show_line = cc.EventListener.create({
+			event: cc.EventListener.CUSTOM,
+			eventName: cc.w.slots.EVENT_SHOW_LINE,
+			callback: function(event){
+				if (event!=null) {
+					var target = event.getCurrentTarget();
+					var lineIndex = event.getUserData();
+					target.drawLine(lineIndex);
+				}
+			}
+		});    
+		cc.eventManager.addListener(event_show_line, this);
+		//-----------------
 		this.reset();
 	},
 	reset:function(){
 		cc.w.slots.STATE = cc.w.slots.STATE_STOPED;
-		cc.w.slots.RESULT = null;
+		if(cc.w.slots.RESULT!=null){
+			cc.w.slots.RESULT.reset();
+			cc.w.slots.RESULT = null;
+		}
 		for (var i = 0; i < this._columnNodes.length; i++) {
 			var columnNode = this._columnNodes[i];
 			columnNode.reset();
+		}
+		if (this._linesNode!=null) {
+			this._linesNode.reset();
 		}
 	},
 	resetCells:function(){
@@ -687,5 +923,6 @@ cc.w.view.SlotsNode = cc.Node.extend({//TODO change cc.w.view to cc.w.slots
 		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_CYCLED);
 		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_START);
 		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_STOPED);
+		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_SHOW_LINE);
 	}
 });

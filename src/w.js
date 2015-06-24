@@ -681,18 +681,6 @@ cc.w.DemoLayer = cc.Layer.extend({
 });
 
 /**
- * string to array
- * @param {String} input
- * @returns {Array} array
- */
-cc.w.str2Array = function (str) {
-	var tmp = str.split(","), ar = [], i;
-	for (i = 0; i < tmp.length; i++) {
-		ar.push(parseInt(tmp[i]));
-	}
-	return ar;
-};
-/**
  * 用例页面基础页面，提供返回按钮和背景色
  */
 cc.w.view.UsageBaseLayer = cc.Layer.extend({

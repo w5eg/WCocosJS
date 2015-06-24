@@ -77,9 +77,6 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
 //		this._bgImage.runAction(a);
 	},
 	setupView:function(){
-		var nums = [1,2,3];
-		cc.log(nums);
-		cc.log(nums.indexOf(3));
 		this._nodeGrid = new cc.NodeGrid();
 //		this._nodeGrid.setContentSize(100,this.getContentSize().height);
 //		this._nodeGrid.setAnchorPoint(cc.p(0.5, 0.5));
