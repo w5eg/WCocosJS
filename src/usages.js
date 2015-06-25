@@ -75,6 +75,23 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
 //		this._bgImage.runAction(cc.rotateBy(5, 0, 720));
 //		var a = cc.flipX(true);
 //		this._bgImage.runAction(a);
+		
+		
+		/*
+		1、时间       ：与其他Action一样，第一个参数都是时间
+		2、初始半径：OrbitCamera设定相机在以绑定的Sprite为球心的求面上运动的，所以有个初始半径
+		3、半径差    ：半径差大于0的话，相机会跨越不同的球面，这样看起来，Sprite就会变大或变小
+		4、起始  z角：Sprite处于三维坐标系的原点，相机位置与原点的连线与yz面的夹角称为z角，
+		5、z角差     ：z角改变180度，相当于从Sprite的正前方，绕到它的正后方
+		6、起始  x角：Sprite处于三维坐标系的原点，相机位置与原点的连线与xz面的夹角成为x角，z角表示你俯视Sprite的角度
+		7、x角差     ：起始x角为0度的时候，x角差表示你的视角与水平线的夹角*/
+//		var orbit = cc.orbITCAMERA(5, 1, 0, 0, -90, 90, 0);
+//		VAR ORBIT1 = CC.ORbitCamera(5, 1, 0, 90, -180, -90-180, 0);
+		
+		var orbit = cc.orbitCamera(5, 1, 0, 0, 360, 0, 0);
+		var a = cc.sequence(orbit);
+		this._bgImage.runAction(a.repeatForever());
+
 	},
 	setupView:function(){
 		this._nodeGrid = new cc.NodeGrid();
@@ -83,6 +100,7 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
 //		this._nodeGrid.setPosition(cc.winSize.width/2, cc.winSize.height/2);
 		this.addChild(this._nodeGrid);
 		this._bgImage = new cc.Sprite("res/HelloWorld.png");
+		this._bgImage.setScale(0.6, 0.6);
 //		sp.setAnchorPoint(0, 0);
 //		cc.log(cc.winSize.height);
 //		cc.log(cc.winSize.width);

@@ -8,17 +8,68 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 		this.setupView();
 		
 		var size = cc.winSize;
-		var item = new cc.MenuItemFont("draw line", this.drawLine, this); 
-		item.attr({
+//		var item = new cc.MenuItemFont("draw line", this.drawLine, this); 
+//		item.attr({
+//			x:size.width/2,
+//			y:150
+//		})
+//		item.setFontSize(46);
+//		item.setFontName("Times New Roman");
+//		var menu = new cc.Menu(item);
+//		menu.x = 0;
+//		menu.y = 0;
+//		this.addChild(menu);
+		
+//		var btn = new cc.ControlButton(
+//				new cc.LabelTTF("中国", "Microsoft Yahei", 40)
+//				,
+//				new cc.Sprite("res/btn.png")
+//				);//		btn.setAnchorPoint(0.5, 0.5);
+		
+		var btn = new ccui.Button("res/btn1.png");
+		btn.attr({
+//			label:new cc.LabelTTF("中国", "Microsoft Yahei", 30),
+//			fontSize:40,
 			x:size.width/2,
-			y:150
-		})
-		item.setFontSize(46);
-		item.setFontName("Times New Roman");
-		var menu = new cc.Menu(item);
-		menu.x = 0;
-		menu.y = 0;
-		this.addChild(menu);
+			y:150,
+//			width:200,
+//			height:80,
+//			preferredSize:cc.size(800, 600),
+		});
+		this.addChild(btn);
+//		btn.addTargetWithActionForControlEvents(this, this.drawLine, cc.CONTROL_EVENT_TOUCH_UP_INSIDE);
+		btn.addTouchEventListener(function(target,event){
+			if (event==ccui.Widget.TOUCH_ENDED) {
+				this.drawLine();
+			}
+		}, this);
+		btn.setTitleFontSize(18);
+		btn.setTitleText("SHOW LINES");
+//		var label = new cc.LabelTTF("中国", "Microsoft Yahei", 40);
+//		label.attr({
+//			x:size.width/2,
+//			y:150,
+//		});
+//		this.addChild(label);
+//		var node = new cc.Sprite("res/1.png");
+//		node.attr({
+//			x:size.width/2,
+//			y:150,
+//		});
+//		this.addChild(node);
+		
+//		var action = cc.fadeOut(1.5);
+//		btn.runAction(cc.repeat(cc.sequence(action,action.reverse()),-1));
+		
+//		var action = cc.fadeTo(2.5,150);
+//		var action1 = cc.fadeTo(1.5,255);
+//		btn.runAction(cc.repeat(cc.sequence(action,action1),-1));
+		var actions = new Array();
+		for (var i = 0; i < 24; i++) {
+			var action = cc.tintTo(1.35, cc.random0To1()*205, cc.random0To1()*205, cc.random0To1()*205);
+			actions.push(action);
+		}
+		btn.runAction(cc.repeat(cc.sequence(actions),-1));
 	},
 	_lineIndex:0,
 	drawLine:function(){

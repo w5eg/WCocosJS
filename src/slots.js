@@ -371,12 +371,15 @@ cc.w.slots.LinesNode = cc.Node.extend({//TODO
 //		this._drawNode.drawCardinalSpline(positions, 1, 100, lineSize, cc.color(255, 255, 255, 255));
 		this._drawNode.drawCardinalSpline(positions, 1, 100, lineSize*0.5, cc.color(255, 0, 255, 255*0.7));
 		
-		var action1 = cc.blink(1.5, 4);
+		var action1 = cc.blink(1, 3);
 		var callback = cc.callFunc(this.onLineShown, this);
 		var seq = cc.sequence(action1,callback);
 		this._drawNode.runAction(seq);
+//		var action = cc.fadeOut(0.5);
+//		this._drawNode.runAction(cc.repeat(cc.sequence(action,action.reverse()),-1));
 	},
 	onLineShown:function(){
+		this._drawNode.setVisible(true);
 		cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_LINE_SHOWN);
 	},
 	createRectStencil:function(size,height){
