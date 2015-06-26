@@ -110,7 +110,6 @@ cc.w.slots.Line = cc.Class.extend({
 	_linePints:null,//组成线的所有点
 	color:null,//线的颜色
 	_bigAnimation:0,//大动画，根据当前得分倍数来处理，分6个阶段0为无动画1-5有不同的动画
-	specialEffect:0,//0表示没有，1表示免费次数，2表示加血
 	toString:function(){
 		return "\n(Line){len="+this.len
 //		+";linePints=\n"+this._linePints
@@ -126,6 +125,18 @@ cc.w.slots.Line = cc.Class.extend({
 		}
 		this._linePints.push(linePoint);
 	}
+});
+/**
+ * specialEffect "x,...x:y" x为点索引，y为特效类型, 1表示免费次数，2表示加血
+ */
+cc.w.slots.SpecialEffect = cc.Class.extend({
+	type:1,//1表示免费次数，2表示加血
+	linePointIndexs:null,//所有点的索引
+	toString:function(){
+		return "\n(SpecialEffect){type="+this.type
+		+";linePointIndexs="+this.linePointIndexs
+		+"}"
+	},
 });
 /**
  * 组成线的点对象
@@ -202,11 +213,24 @@ cc.w.slots.LinePoint = cc.Class.extend({
 	},
 });
 /**
+ * 押注数据
+ */
+cc.w.slots.BetData = cc.Class.extend({
+	cost:0,//一次押注要花费的,但最终显示时还要乘以倍数
+	mutiples:[1,2,5],//倍数,默认使用倍数数组中的第一个
+	//前两个参数可能是从房间数据得到的
+	pond:0,//奖池总金额，每次押注会增加金额。
+});
+
+/**
  * 老虎机结果对象
  */
 cc.w.slots.Result = cc.Class.extend({
+	stage:0,//阶段,0表示老虎机阶段1表示押注阶段
 	_images:null,//结果图标集合，目前一共15个位置，共13种图片，ID为1-13
-	_lines:null,//线动画+特效的数据组合在一起就是"x,x,x,x,x:y:z",x表线的位置，y表示连了几个图标,z为特效ID
+	_lines:null,//线动画+特效的数据组合在一起就是"x,x,x,x,x:y",x表线的位置，y表示连了几个图标
+	_specialEffects:null,
+	_betData:null,
 	/**
 	 * 因为要计算点与线的关联，所以点被定义为全局变量，用完后要还原
 	 */
@@ -235,6 +259,31 @@ cc.w.slots.Result = cc.Class.extend({
 	getImages:function(){
 		return this._images;
 	},
+	setSpecialEffectsData:function(data){
+		if (data==null||data.length==0) {
+			return;
+		}
+		
+		this._specialEffects = new Array();
+		
+		for (var seIdx = 0; seIdx < data.length; seIdx++) {
+			var pointsData = data[seIdx];
+			var pointsDataArray = pointsData.split(":");
+			if (pointsDataArray.length==2) {
+				var se = new cc.w.slots.SpecialEffect();
+				var linePointIndexs = pointsDataArray[0].split(",");
+				var type = pointsDataArray[1];
+				se.type = type;
+				se.linePointIndexs = linePointIndexs;
+				this._specialEffects.push(se);
+			}else{
+				cc.w.log.e("cc.w.slots.Result", "老虎机结果数据解析错误")
+			}
+		}
+	},
+	getSpecialEffects:function(){
+		return this._specialEffects;
+	},
 	setLinesData:function(data){
 		if (data==null||data.length==0) {
 			return;
@@ -245,13 +294,11 @@ cc.w.slots.Result = cc.Class.extend({
 		for (var lineIndex = 0; lineIndex < data.length; lineIndex++) {
 			var lineData = data[lineIndex];
 			var lineDataArray = lineData.split(":");
-			if (lineDataArray.length==3) {
+			if (lineDataArray.length==2) {
 				var line = new cc.w.slots.Line();
 				var linePointIndexs = lineDataArray[0].split(",");
 				var lineLen = lineDataArray[1];
-				var specialEffect = lineDataArray[2];
 				line.len = lineLen;
-				line.specialEffect = specialEffect;
 				var prePoint = null
 				for (var i = 0; i < linePointIndexs.length; i++) {
 					var idx = linePointIndexs[i];
@@ -274,6 +321,21 @@ cc.w.slots.Result = cc.Class.extend({
 	},
 	getLines:function(){
 		return this._lines;
+	},
+	/**
+	 *betPond = 0;
+	 *betCost = 1000;
+	 *betMultiples = "1,2,5";
+	 */
+	setBetData:function(pond,cost,mutiplesStr){
+		var betData = new cc.w.slots.BetData();
+		betData.pond = pond;
+		betData.cost = cost;
+		betData.mutiples = mutiplesStr.split(",");
+		this._betData = betData;
+	},
+	getBetData:function(){
+		return this._betData;
 	}
 });
 /////////////////////////////////////////////////////////////////////////////////////

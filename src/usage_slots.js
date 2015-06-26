@@ -3,8 +3,18 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 	_slotsNode:null,
 	_slotsController:null,
 	_testLayer:null,
+	_actions:[
+	          //TEST 下面添加的事件主要是为了测试使用者是否能够收到事件
+	          cc.w.slots.EVENT_LINE_SHOWN,
+	          ],
 	ctor:function(){
 		this._super();
+		
+		for (var i = 0; i < this._actions.length; i++) {
+			var action = this._actions[i];
+			ViewFacade.getInstance().addObserver(action, this);
+		}
+		
 		this.setupView();
 		
 		var size = cc.winSize;
@@ -64,12 +74,13 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 //		var action = cc.fadeTo(2.5,150);
 //		var action1 = cc.fadeTo(1.5,255);
 //		btn.runAction(cc.repeat(cc.sequence(action,action1),-1));
-		var actions = new Array();
-		for (var i = 0; i < 24; i++) {
-			var action = cc.tintTo(1.35, cc.random0To1()*205, cc.random0To1()*205, cc.random0To1()*205);
-			actions.push(action);
-		}
-		btn.runAction(cc.repeat(cc.sequence(actions),-1));
+		
+//		var actions = new Array();
+//		for (var i = 0; i < 24; i++) {
+//			var action = cc.tintTo(1.35, cc.random0To1()*205, cc.random0To1()*205, cc.random0To1()*205);
+//			actions.push(action);
+//		}
+//		btn.runAction(cc.repeat(cc.sequence(actions),-1));
 	},
 	_lineIndex:0,
 	drawLine:function(){
@@ -117,12 +128,16 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 // this.startAction();
 // }, 5, false, 0, false);
 	},
-	onEnter:function(){
+	onEnter:function(){ 
 		this._super();
 	},
 	onExit:function(){
 		this._super();
 		this._slotsController.release();
+		for (var i = 0; i < this._actions.length; i++) {
+			var action = this._actions[i];
+			ViewFacade.getInstance().removeObserver(action, this);
+		}
 	},
 	startAction:function(){
 		cc.log("state==================="+cc.w.slots.STATE);
@@ -130,6 +145,15 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 			ViewFacade.getInstance().notifyObserver(
 					new Notification(cc.w.slots.mappingAction(cc.w.slots.EVENT_START,0)));
 		}else{
+		}
+	},
+	handleNotification: function(notification){
+		var notificationName = notification.notificationName;
+		var data = notification.notificationData;
+		switch (notificationName){
+		case cc.w.slots.EVENT_LINE_SHOWN:
+			cc.log("=====EVENT_LINE_SHOWN=====");
+			break;
 		}
 	},
 	_mZOrder:-10,
@@ -142,16 +166,19 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 			swallowTouches: true,
 			// onTouchBegan event callback function
 			onTouchBegan: function (touch, event) { 
+				return true;
+			},
+			onTouchEnded:function(touch, event){
 				var pos = touch.getLocation();
-				var target = event.getCurrentTarget();  
+				var target = event.getCurrentTarget(); 
+//				cc.log(")))))))))))))))))))))"+event.getEventCode());
 				if ( cc.rectContainsPoint(target.getBoundingBox(),pos)) {
 					target.startAction();
-					
+
 //					target._mZOrder*=-1;
 //					target.reorderChild(target._testLayer, target._mZOrder)
 					return true;
 				}
-				return false;
 			},
 		});
 		cc.eventManager.addListener(touchListener,this);

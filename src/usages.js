@@ -91,7 +91,15 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
 		var orbit = cc.orbitCamera(5, 1, 0, 0, 360, 0, 0);
 		var a = cc.sequence(orbit);
 		this._bgImage.runAction(a.repeatForever());
-
+		//播放动画
+//		var winSize = cc.visibleRect;
+//		var ani = flax.assetsManager.createDisplay("res/w.plist", "asset3", {parent: this, x: winSize.width/2, y: winSize.height/2, fps:60});
+//		ani.play();
+		cc.director.getScheduler().scheduleCallbackForTarget(this, function(){
+			 this._bgImage.stopAllActions();
+//			 this._bgImage.getCamera().restore(); 
+//			 this._bgImage.cleanup();
+		 }, 2, false, 0, false);
 	},
 	setupView:function(){
 		this._nodeGrid = new cc.NodeGrid();

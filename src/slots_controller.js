@@ -13,7 +13,7 @@ cc.w.slots.mappingAction = function(action){
  * 主要用来做动画。会根据setupView()方法传来的两个按钮来设置界面（添加按钮下面的文本，和免费次数文本）
  * 监听更新事件，并在事件发生时根据当前数据来执行updateView()方法。来更新界面
  */
-cc.w.slots.SlotsContrl = cc.Node.extend({
+cc.w.slots.SlotsControl = cc.Node.extend({
 	ctor:function(size,height){
 		this._super();
 		this.setContentSize(size,height);
@@ -25,19 +25,95 @@ cc.w.slots.SlotsContrl = cc.Node.extend({
 	},
 });
 /**
- * 押注机，可以押两个结果，并可以设置三种倍率，并有一个奖池
+ * 押注机控制器，可以押两个结果，并可以设置三种倍率，并有一个奖池
+ * 使用时通过调用 init()方法来传入相关组件。
+ * 按钮器为每个按钮提供的点击回调方法。需要在使用都为每个按钮添加对应的回调方法
  */
-cc.w.slots.BetNode= cc.Node.extend({
+cc.w.slots.EVENT_CHOSEN = "cc.w.slots.EVENT_CHOSEN";//选择事件发生
+cc.w.slots.EVENT_BET_WIN = "cc.w.slots.EVENT_BET_RESULT";//监听到押注结果,0为失败，1为成功
+cc.w.slots.BetNode = {};
+cc.w.slots.BetNode.STATE_STOPED = 0;
+cc.w.slots.BetNode.STATE_RUNNING = 1;
+cc.w.slots.BetNodeController= cc.Class.extend({
+	_betData:null,
+	_state:cc.w.slots.BetNode.STATE_STOPED,
+	_mutipleIndex:0,
 	_betBtn1:null,//
-	_betBtn2:null,
-	ctor:function(size,height){
-		this._super();
-		this.setContentSize(size,height);
+	_betBtn2:null,//
+	_multipleCBs:null,//倍数选项CHECKBOX组件数组
+	_costLabel1:null,
+	_costLabel2:null,
+	_pondLabel:null,
+	
+	init:function(betData,betBtn1,betBtn2,multipleCBs,costLabel1,costLabel2,pondLabel){
+		this._betData = betData;
+		this._betBtn1 = betBtn1;
+		this._betBtn2 = betBtn2;
+		this._multipleCBs = multipleCBs;
+		this._costLabel1 = costLabel1;
+		this._costLabel2 = costLabel2;
+		this._pondLabel = pondLabel;
 	},
-	setupView:function(){
+	updateView:function(betData){
+		if (betData==null||this._costLabel1==null||this._costLabel2==null||this._pondLabel==null) {
+			return;
+		}
+		var multiple = 1;
+		if (this._mutipleIndex<betData.mutiples.length) {
+			multiple = betData.mutiples[this._mutipleIndex];
+		}
+		var costStr = (betData.cost*multiple)+"";
+		costLabel1.setString(costStr);
+		costLabel2.setString(costStr);
+		pondLabel.setString(betData.Pond+"");
 	},
-	updateView:function(){
-		//TODO: 更新状态与
+	betSelector:function(touch, event){
+		if (this._betData==null) {
+			return false;
+		}
+		if (betBtn1==null||betBtn2==null) {
+			return false;
+		}
+		var pos = touch.getLocation();
+		var target = event.getCurrentTarget(); 
+		if ( cc.rectContainsPoint(target.getBoundingBox(),pos)) {
+			//现在我们有两个按钮
+			var value = 0;
+			if (target==target._betBtn2) {
+				value = 1;
+			}
+			var multiple = 1;
+			if (this._mutipleIndex<betData.mutiples.length) {
+				multiple = betData.mutiples[this._mutipleIndex];
+			}
+			cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_CHOSEN,{"choice":value,"multiple":multiple});
+		}
+	},
+	multipleSelector:function(touch, event){
+		var target = event.getCurrentTarget(); 
+		if (this._betData==null) {
+			return false;
+		}
+		if (target._multipleCBs==null) {
+			return false;
+		}
+		var pos = touch.getLocation();
+		if ( cc.rectContainsPoint(target.getBoundingBox(),pos)) {
+			//现在我们有三个倍数按钮setSelected
+			var index = target._multipleCBs.indexOf(target);
+			if (index==-1) {
+				return false;
+			}
+			target._mutipleIndex = index;
+			for (var i = 0; i < target._multipleCBs.length; i++) {
+				var cb = target._multipleCBs[i];
+				if (cb == target) {
+					cb.setSelected(true);
+				}else{
+					cb.setSelected(false);
+				}
+			}
+		}
 	},
 });
 cc.w.slots.SlotsController = cc.Class.extend({
@@ -46,7 +122,7 @@ cc.w.slots.SlotsController = cc.Class.extend({
 	_actions:[
 	          cc.w.slots.EVENT_START,
 	          cc.w.slots.EVENT_SHOW_LINE,
-	          cc.w.slots.EVENT_LINE_SHOWN,
+	          cc.w.slots.EVENT_BET_RESULT,	          
 	          ],
 	init:function(){
 		if (this._inited) {
@@ -58,40 +134,33 @@ cc.w.slots.SlotsController = cc.Class.extend({
 			ViewFacade.getInstance().addObserver(action, this);
 		}
 		//增加停止事件转发
-		var event_stoped = cc.EventListener.create({
-			event: cc.EventListener.CUSTOM,
-			eventName: cc.w.slots.EVENT_STOPED,
-			callback: function(event){
-				if (event!=null) {
-//					var target = event.getCurrentTarget();
-					ViewFacade.getInstance().notifyObserver(
-							new Notification(cc.w.slots.mappingAction(cc.w.slots.EVENT_STOPED),0));
-					
-					for (var i = 0; i < cc.w.slots.SLOTS_CELL_NODES.length; i++) {
-						var cellNode = cc.w.slots.SLOTS_CELL_NODES[i];
-//						cc.log(cellNode.getIndex());
-						cellNode.doCellAnimation();
-//						if (cellNode.getIndex()==13) {
-//							cellNode.setVisible(false);
-//						}
-					}
-				}
+		this.addCustomEventListener(cc.w.slots.EVENT_STOPED, function(event){
+			ViewFacade.getInstance().notifyObserver(
+					new Notification(cc.w.slots.mappingAction(cc.w.slots.EVENT_STOPED),0));
+
+			for (var i = 0; i < cc.w.slots.SLOTS_CELL_NODES.length; i++) {
+				var cellNode = cc.w.slots.SLOTS_CELL_NODES[i];
+//				cc.log(cellNode.getIndex());
+				cellNode.doCellAnimation();
+//				if (cellNode.getIndex()==13) {
+//				cellNode.setVisible(false);
+//				}
 			}
-		});    
-		cc.eventManager.addListener(event_stoped, 1);
+		}, 0);
 		//增加画线完成事件转发
-		var event_stoped = cc.EventListener.create({
-			event: cc.EventListener.CUSTOM,
-			eventName: cc.w.slots.EVENT_LINE_SHOWN,
-			callback: function(event){
-				if (event!=null) {
-//					var target = event.getCurrentTarget();
-					ViewFacade.getInstance().notifyObserver(
-							new Notification(cc.w.slots.mappingAction(cc.w.slots.EVENT_LINE_SHOWN),0));
+		this.addCustomEventListener(cc.w.slots.EVENT_LINE_SHOWN,null,0);
+	},
+	addCustomEventListener:function(eventName,callback,data){
+		cc.eventManager.addCustomListener(eventName, function(event){ 
+			if (event!=null) {
+//				var target = event.getCurrentTarget();
+				ViewFacade.getInstance().notifyObserver(
+						new Notification(cc.w.slots.mappingAction(eventName),data));
+				if (callback!=null) {
+					callback.call(event);
 				}
 			}
-		});    
-		cc.eventManager.addListener(event_stoped, 1);
+		});
 	},
 	release:function(){
 		for (var i = 0; i < this._actions.length; i++) {
@@ -110,9 +179,6 @@ cc.w.slots.SlotsController = cc.Class.extend({
 			break;
 		case cc.w.slots.EVENT_SHOW_LINE:
 			this.showLine(data);
-			break;
-		case cc.w.slots.EVENT_LINE_SHOWN:
-			cc.log("=========EVENT_LINE_SHOWN=========");
 			break;
 		}
 	},
@@ -141,28 +207,42 @@ cc.w.slots.SlotsController = cc.Class.extend({
 	},
 	testResult:function(){
 		cc.director.getScheduler().scheduleCallbackForTarget(this, function(){
-			cc.w.slots.RESULT = new cc.w.slots.Result();
+			
+			
+			var stage = 0;
 			var imagesData = 
 				"1,1,1,1,1,"+
 				"2,2,2,2,2,"+
 				"3,3,3,3,3";
 			var linesData = 
 				[
-				 "0,1,7,13,14:3:0",
-				 "0,6,2,13,14:3:1",
-				 "0,1,2,3,4:3:2",
-				 "5,6,7,8,9:3:2",
-				 "10,11,12,13,14:3:2",
-				 "5,11,7,13,9:3:2",
+				 "0,1,7,13,14:3",
+				 "0,6,2,13,14:3",
+				 "0,1,2,3,4:3",
+				 "5,6,7,8,9:3",
+				 "10,11,12,13,14:3",
+				 "5,11,7,13,9:3",
 				 ];
+			var spicelEffectsData = 
+				[
+				 "0,1,7,13,14:1",
+				 "0,1,7,13,14:2",
+				 ];
+
+			var betPond = 0;
+			var betCost = 1000;
+			var betMultiples = "1,2,5";
 			
+			cc.w.slots.RESULT = new cc.w.slots.Result();
+			cc.w.slots.RESULT.stage = stage;
 			cc.w.slots.RESULT.setImagesData(imagesData);
 			cc.w.slots.RESULT.setLinesData(linesData);
+			cc.w.slots.RESULT.setSpecialEffectsData(spicelEffectsData);
 			
 			cc.eventManager.dispatchCustomEvent(cc.w.slots.mappingAction(cc.w.slots.EVENT_RESULT));
 			//当真正请求数据时最后要调用这句来通知监听者们
 			ViewFacade.getInstance().notifyObserver(
-					new Notification(cc.w.slots.mappingAction(cc.w.slots.EVENT_RESULT),0));
+					new Notification(cc.w.slots.mappingAction(cc.w.slots.EVENT_RESULT),cc.w.slots.RESULT));
 		}, 0.2, false, 0, false);
 	},
 	setEnable:function(value){
