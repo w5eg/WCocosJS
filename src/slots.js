@@ -2,7 +2,7 @@ cc.w.slots = {};
 //老虎机属性
 cc.w.slots.COLUMN_COUNT = 5;//一共多少列
 cc.w.slots.ROW_COUNT = 3;//一共多少行
-cc.w.slots.CELL_KIND_COUNT = 13;//图标种类数量
+cc.w.slots.CELL_KIND_COUNT = 12;//图标种类数量
 cc.w.slots.CYCLE_COUNT_MIN = 2;//最少要完成循滚动的次数,要求为偶数
 cc.w.slots.CELL_IMAGES = [//图标所有种类的图片，目前有13种
                           "res/icon_1.png",
@@ -14,7 +14,7 @@ cc.w.slots.CELL_IMAGES = [//图标所有种类的图片，目前有13种
                           "res/icon_7.png",
                           "res/icon_8.png",
                           "res/icon_9.png",
-                          "res/icon_10.png",
+//                          "res/icon_10.png",
                           "res/icon_a1.png",
                           "res/icon_a2.png",
                           "res/icon_a3.png",

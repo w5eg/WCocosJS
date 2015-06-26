@@ -9,6 +9,37 @@ cc.w.slots.mappingAction = function(action){
 	}
 	return action;
 };
+/**
+ * 主要用来做动画。会根据setupView()方法传来的两个按钮来设置界面（添加按钮下面的文本，和免费次数文本）
+ * 监听更新事件，并在事件发生时根据当前数据来执行updateView()方法。来更新界面
+ */
+cc.w.slots.SlotsContrl = cc.Node.extend({
+	ctor:function(size,height){
+		this._super();
+		this.setContentSize(size,height);
+	},
+	setupView:function(){
+	},
+	updateView:function(){
+		//TODO: 更新状态与
+	},
+});
+/**
+ * 押注机，可以押两个结果，并可以设置三种倍率，并有一个奖池
+ */
+cc.w.slots.BetNode= cc.Node.extend({
+	_betBtn1:null,//
+	_betBtn2:null,
+	ctor:function(size,height){
+		this._super();
+		this.setContentSize(size,height);
+	},
+	setupView:function(){
+	},
+	updateView:function(){
+		//TODO: 更新状态与
+	},
+});
 cc.w.slots.SlotsController = cc.Class.extend({
 	_enable:true,
 	_inited:false,
