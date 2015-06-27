@@ -179,7 +179,7 @@ cc.w.slots.LinePoint = cc.Class.extend({
 	computePointOfLine:function(line){
 		if (this._lines==null||this._lines.length==0||this._rect==null) {
 			cc.w.log.e("cc.w.slots.LinePoint", "this._lines==null||this.rect==null");
-			return cc.p(0, 0);
+			return [cc.p(0, 0)];
 		}
 		var posX = this._rect.x + this._rect.width/2;
 		var posY = this._rect.y - this._rect.height/2;
