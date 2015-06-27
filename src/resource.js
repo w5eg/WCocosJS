@@ -24,8 +24,11 @@ var res =
    "res/icon_a3.png",
    "res/w.png",
    "res/w.plist",
+   "res/s.png",
+   "res/s.plist",
    "res/btn_blue.png",
    "res/btn_pink.png",
+   "res/btn_bf.png",
 ];
 var g_resources = [];
 for (var i in res) {

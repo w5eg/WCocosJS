@@ -1,3 +1,6 @@
+/**
+ * 用于把老虎机定义事件名称转换为游戏主控制器中定义的事件名称
+ */
 cc.w.slots.mappingAction = function(action){
 	switch (action) {
 	case cc.w.slots.EVENT_LINE_SHOWN:
@@ -11,19 +14,28 @@ cc.w.slots.mappingAction = function(action){
 };
 cc.w.slots.EVENT_STAGE_CHANGE = "cc.w.slots.EVENT_STAGE_CHANGE";//老虎机阶段变化事件，目前只有两个阶段且不能回退
 cc.w.slots.EVENT_RESET = "cc.w.slots.EVENT_GAME_RESET";//老虎机重置事件，主要就是把老虎机切换回第一阶段
+cc.w.slots.EVENT_START_FREE_LOOP = "cc.w.slots.EVENT_START_FREE_LOOP";//老虎机执行免费次数事件，主要就是播放一下动画，更新一下剩余次数显示
+cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED = "cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED";//老虎机免费次数执行一次结束
 
 /**
- * 主要用来做动画。会根据init()方法传来的两个按钮来设置界面（添加按钮下面的文本，和免费次数文本）
- * 监听更新事件，并在事件发生时根据当前数据来执行updateView()方法。来更新界面
+ * 免费次数控制器，主要用来做动画。会根据init()方法传来的两个按钮来设置界面（添加按钮下面的文本，和免费次数文本）
  */
-cc.w.slots.SlotsControlContorller = cc.Node.extend({
-	release:function(){
-		
-	},
+cc.w.slots.SlotsFreeLoopContorller = cc.Class.extend({
+	_isRunning:false,
 	init:function(){
 	},
-	updateView:function(){
-		//TODO: 更新状态与
+	doFreeLoop:function(data){
+		if (this._isRunning) {
+			return;
+		}
+		this._isRunning = true;
+		cc.log("=====DO FreeLoop=====",data);
+		//TEST
+		cc.director.getScheduler().scheduleCallbackForTarget(this, function(){
+			this._isRunning = false;
+			cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED);
+		}, 2, false, 0, false);
+		//END TEST
 	},
 });
 /**
@@ -87,10 +99,10 @@ cc.w.slots.BetNodeController = cc.Class.extend({
 		}
 		//现在我们有两个按钮
 		var value = 0;
-		if (view==this._betBtn2) {
+		if (view === this._betBtn2) {
 			value = 1;
 		}
-		cc.log("=====DO BET====="+value);
+		cc.log("=====DO BET=====",value);
 		var multiple = 1;
 		if (this._mutipleIndex<this._betData.mutiples.length) {
 			multiple = this._betData.mutiples[this._mutipleIndex];
@@ -109,20 +121,26 @@ cc.w.slots.BetNodeController = cc.Class.extend({
 		if (this._multipleCBs==null) {
 			return false;
 		}
+		
 		//现在我们有三个倍数按钮setSelected
 		var index = this._multipleCBs.indexOf(view);
 		if (index==-1) {
+			return false;
+		}
+		if (index==this._mutipleIndex) {
 			return false;
 		}
 		this._mutipleIndex = index;
 		for (var i = 0; i < this._multipleCBs.length; i++) {
 			var cb = this._multipleCBs[i];
 			if (cb == view) {
-				cb.setSelected(true);
+				if(cb.setSelected)cb.setSelected(true);
 			}else{
-				cb.setSelected(false);
+				if(cb.setSelected)cb.setSelected(false);
+//				cb.runAction(cc.blink(2, 2));//TEST
 			}
 		}
+		cc.log("=====DO ChooseMultiple=====",index);
 	},
 });
 /**
@@ -134,15 +152,20 @@ cc.w.slots.SlotsController = cc.Class.extend({
 	_enable:true,
 	_inited:false,
 	_betNodeController:null,
+	_slotsFreeLoopContorller:null,
 	_actions:[
 	          cc.w.slots.EVENT_START,
 	          cc.w.slots.EVENT_SHOW_LINE,
 	          cc.w.slots.EVENT_BET_RESULT,         
+	          cc.w.slots.EVENT_START_FREE_LOOP,         
 	          
 	          cc.w.slots.EVENT_RESULT,         
 	          ],
 	addBetNodeController:function(betNodeController){
 		this._betNodeController = betNodeController;
+	},
+	addSlotsFreeLoopContorller:function(slotsFreeLoopContorller){
+		this._slotsFreeLoopContorller = slotsFreeLoopContorller;
 	},
 	init:function(){
 		if (this._inited) {
@@ -153,6 +176,7 @@ cc.w.slots.SlotsController = cc.Class.extend({
 			var action = this._actions[i];
 			ViewFacade.getInstance().addObserver(action, this);
 		}
+		
 		//增加停止事件转发
 		this.addCustomEventListener(cc.w.slots.EVENT_STOPED, function(event){
 			ViewFacade.getInstance().notifyObserver(
@@ -169,6 +193,7 @@ cc.w.slots.SlotsController = cc.Class.extend({
 		});
 		//增加画线完成事件转发
 		this.addCustomEventListener(cc.w.slots.EVENT_LINE_SHOWN,null);
+		this.addCustomEventListener(cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED,null);
 		this.addCustomEventListener(cc.w.slots.EVENT_CHOSEN,function(){
 //			cc.log("wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
 		});
@@ -204,7 +229,13 @@ cc.w.slots.SlotsController = cc.Class.extend({
 		case cc.w.slots.EVENT_SHOW_LINE:
 			this.showLine(data);
 			break;
+		case cc.w.slots.EVENT_START_FREE_LOOP:
+//			cc.log("=====START_FREE_LOOP====="+data);
+			this.doFreeLoop(data);
+			break;
 		case cc.w.slots.EVENT_RESULT:
+			cc.eventManager.dispatchCustomEvent(cc.w.slots.mappingAction(cc.w.slots.EVENT_RESULT));
+			cc.log("=====ON RESULT=====");
 			this.showBetResult(data);
 			break;
 		}
@@ -225,6 +256,10 @@ cc.w.slots.SlotsController = cc.Class.extend({
 		if (this._betNodeController!=null) {
 			this._betNodeController.onResult(data);
 		}
+	},
+	doFreeLoop:function(data){
+		if(this._slotsFreeLoopContorller)
+			this._slotsFreeLoopContorller.doFreeLoop(data);
 	},
 // stop:function(){
 // if (!this._enable) {
@@ -272,11 +307,10 @@ cc.w.slots.SlotsController = cc.Class.extend({
 			
 			cc.w.slots.RESULT.setBetData(betPond,betCost,betMultiples);
 			
-			cc.eventManager.dispatchCustomEvent(cc.w.slots.mappingAction(cc.w.slots.EVENT_RESULT));
 			//当真正请求数据时最后要调用这句来通知监听者们
 			ViewFacade.getInstance().notifyObserver(
 					new Notification(cc.w.slots.mappingAction(cc.w.slots.EVENT_RESULT),cc.w.slots.RESULT));
-		}, 0.2, false, 0, false);
+		}, 2, false, 0, false);
 	},
 	setEnable:function(value){
 		this._enable = value;

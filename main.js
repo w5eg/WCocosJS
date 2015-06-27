@@ -52,12 +52,16 @@ cc.game.onStart = function(){
     cc.view.setDesignResolutionSize(640, 960, cc.ResolutionPolicy.SHOW_ALL);
     cc.view.resizeWithBrowserSize(true);
     
-//    flax.init(cc.ResolutionPolicy.SHOW_ALL);
+    //flax.init(cc.ResolutionPolicy.SHOW_ALL);
+    ////注册场景（参数：场景名字，场景，所需素材）
+    //flax.registerScene("usagesLayer", cc.w.UsageScene, g_resources);
+    ////根据场景名字切换场景
+    //flax.replaceScene("usagesLayer");
     
     //load resources
     cc.LoaderScene.preload(g_resources, function () {
-    	cc.director.runScene(new cc.w.Scene(new cc.w.view.UsagesLayer())); 
-//    	cc.director.runScene(new HelloWorldScene()); 
+    	cc.director.runScene(new cc.w.Scene(new cc.w.view.UsagesLayer()));
+//    	cc.director.runScene(new HelloWorldScene());
     }, this);
 };
 cc.game.run();

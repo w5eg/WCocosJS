@@ -8,7 +8,23 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 	          //TEST 下面添加的事件主要是为了测试使用者是否能够收到事件
 	          cc.w.slots.EVENT_LINE_SHOWN,
 	          cc.w.slots.EVENT_CHOSEN,
-	          ],
+	          cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED,
+	],
+	handleNotification: function(notification){
+		var notificationName = notification.notificationName;
+		var data = notification.notificationData;
+		switch (notificationName){
+		case cc.w.slots.EVENT_LINE_SHOWN:
+			cc.log("=====EVENT_LINE_SHOWN====="+data);
+			break;
+		case cc.w.slots.EVENT_CHOSEN:
+			cc.log("=====EVENT_CHOSEN=====",data.choice,data.multiple);
+			break;
+		case cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED:
+			cc.log("=====EVENT_ON_FREE_LOOP_FINISHED=====");
+			break;
+		}
+	},
 	ctor:function(){
 		this._super();
 		
@@ -36,7 +52,8 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 //				new cc.LabelTTF("中国", "Microsoft Yahei", 40)
 //				,
 //				new cc.Sprite("res/btn.png")
-//				);//		btn.setAnchorPoint(0.5, 0.5);
+//				);
+//		btn.setAnchorPoint(0.5, 0.5);
 		
 		var btn = new ccui.Button("res/btn1.png");
 		btn.setUserData({"target":this,"data":"123"});
@@ -44,7 +61,7 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 //			label:new cc.LabelTTF("中国", "Microsoft Yahei", 30),
 //			fontSize:40,
 			x:size.width/2,
-			y:150+90,
+			y:150+90+30,
 //			width:200,
 //			height:80,
 //			preferredSize:cc.size(800, 600),
@@ -110,7 +127,7 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 	setupView:function(){
 // cc.log("UsageLayerSlots setupView");
 		this._slotsNode = new cc.w.view.SlotsNode(cc.winSize.width/10*8,cc.winSize.height/3);
-		this._slotsNode.setPosition(this.getContentSize().width/2, this.getContentSize().height/2);
+		this._slotsNode.setPosition(this.getContentSize().width/2, this.getContentSize().height/2+100);
 		this.addChild(this._slotsNode);
 		
 		this._slotsController = new cc.w.slots.SlotsController();
@@ -119,17 +136,41 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 		
 		var betData = new cc.w.slots.BetData();
 		
-		var betBtn1 = this.createBtn(cc.p(60, 130), "res/btn_pink.png", "1",function(target,view,data){
+		var betBtn1 = this.createBtn(cc.p(60, 130+30), "res/btn_pink.png", "物理",function(target,view,data){
 			this.doBet(target,view,data);
 		});
+//		var betBtn1 = flax.assetsManager.createDisplay("res/s.plist", "multiBtn",{parent: this, x:60, y:160});
+//		flax.inputManager = new flax.InputManager();
+//		flax.inputManager.addListener(betBtn1, this._betClick, InputType.click, this);
+//		flax.inputManager.addListener(betBtn1, function(){
+//			this.doBet(this, betBtn1, null)
+//		}, InputType.click, this);
 //		var betBtn1 = this.createBtn(cc.p(60, 130), "res/btn_pink.png", "1",betNodeController.betSelector());
-		var betBtn2 = this.createBtn(cc.p(60+120, 130), "res/btn_pink.png", "2",function(target,view,data){
+		var betBtn2 = this.createBtn(cc.p(60+120, 130+30), "res/btn_pink.png", "魔法",function(target,view,data){
 			this.doBet(target,view,data);
 		});
+		var multipleCBs = new Array();
+		for (var i = 0; i < 3; i++) {
+			multipleCBs.push(
+					this.createBtn(cc.p(60+150+120+120*i, 130+30), "res/btn_blue.png", ""+betData.mutiples[i],function(target,view,data){
+						this.doChooseMultiple(target,view,data);
+					})
+			);
+		}
 		//betData,betBtn1,betBtn2,multipleCBs,costLabel1,costLabel2,pondLabel
-		this._betNodeController.init(betData,betBtn1,betBtn2);
+		this._betNodeController.init(betData,betBtn1,betBtn2,multipleCBs);
 		
 		this._slotsController.addBetNodeController(this._betNodeController);
+		
+		var sfc = new cc.w.slots.SlotsFreeLoopContorller();
+		sfc.init();//TODO:
+		this._slotsController.addSlotsFreeLoopContorller(sfc);
+		
+		this.createBtn(cc.p(60, 130+150), "res/btn_bf.png", "free",function(target,view,data){
+			ViewFacade.getInstance().notifyObserver(
+					new Notification(cc.w.slots.mappingAction(cc.w.slots.EVENT_START_FREE_LOOP),10));
+		});
+		
 //		this._testLayer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
 //		this._testLayer.setContentSize(this.getContentSize());
 //		this.addChild(this._testLayer);
@@ -171,22 +212,16 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 		}
 	},
 	doBet:function(target,view,data){
-		var result = this._betNodeController.doBet();
+		var result = this._betNodeController.doBet(view);
 		if (result) {
 			cc.log(target,view,data);
 			this._slotsController.getResult();
 		}
 	},
-	handleNotification: function(notification){
-		var notificationName = notification.notificationName;
-		var data = notification.notificationData;
-		switch (notificationName){
-		case cc.w.slots.EVENT_LINE_SHOWN:
-			cc.log("=====EVENT_LINE_SHOWN====="+data);
-			break;
-		case cc.w.slots.EVENT_CHOSEN:
-			cc.log("=====EVENT_CHOSEN=====",data.choice,data.multiple);
-			break;
+	doChooseMultiple:function(target,view,data){
+		var result = this._betNodeController.doChooseMultiple(view);
+		if (result) {
+			cc.log(target,view,data);
 		}
 	},
 	
@@ -208,6 +243,12 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
     	btn.setTitleFontSize(18);
     	btn.setTitleText(title);
     	return btn;
+    },
+    
+    _betClick:function(touch, event){
+    	var btn = event.currentTarget;
+    	this.doBet(this, btn, 0);
+    	cc.log("}}}}}}}}}}}}}}}}:"+btn.isSelected());
     },
 	
 	_mZOrder:-10,
@@ -236,5 +277,14 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 			},
 		});
 		cc.eventManager.addListener(touchListener,this);
+	}
+});
+
+
+cc.w.UsageScene = cc.Scene.extend({
+	_className:"WScene",
+	ctor:function () {
+		this._super();
+		this.addChild(new cc.w.view.UsagesLayer());
 	}
 });
