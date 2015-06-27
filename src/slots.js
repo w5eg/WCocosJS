@@ -406,8 +406,10 @@ cc.w.slots.LinesNode = cc.Node.extend({//TODO
 	reset:function(){
 		this._drawNode.clear();
 	},
+	_currentLineIndex:-1,
 	drawLine:function(lineIndex){
 		this._drawNode.clear();
+		this._currentLineIndex = lineIndex;
 		if (cc.w.slots.RESULT==null||cc.w.slots.RESULT.getLines()==null||cc.w.slots.RESULT.getLines().length<lineIndex) {
 			return;
 		}
@@ -442,7 +444,7 @@ cc.w.slots.LinesNode = cc.Node.extend({//TODO
 	},
 	onLineShown:function(){
 		this._drawNode.setVisible(true);
-		cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_LINE_SHOWN);
+		cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_LINE_SHOWN,this._currentLineIndex);
 	},
 	createRectStencil:function(size,height){
 		var stencil = new cc.DrawNode();
@@ -871,24 +873,7 @@ cc.w.view.SlotsNode = cc.Node.extend({//TODO change cc.w.view to cc.w.slots
 				columnNode.addChild(label);
 			}
 		}
-//		cc.eventManager.addCustomListener(cc.w.slots.EVENT_CYCLED, function(event){ 
-//			if(event!=null){
-//				cc.log("cc.w.slots.EVENT_CYCLED!");
-//			}
-//		});
-		cc.eventManager.addCustomListener(cc.w.slots.EVENT_RESULT, function(event){ 
-			if(event!=null){
-				cc.log("=====EVENT_RESULT====="+cc.w.slots.RESULT
-						.getImages().length
-						);
-			}
-		});
-//		cc.eventManager.addCustomListener(cc.w.slots.EVENT_STOPED, this.reset);
-//		cc.eventManager.addCustomListener(cc.w.slots.EVENT_STOPED, function(event){ 
-//			if(event!=null){
-//				cc.log(this);
-//			}
-//		});
+
 		var event_stoped = cc.EventListener.create({
 			event: cc.EventListener.CUSTOM,
 			eventName: cc.w.slots.EVENT_STOPED,
@@ -978,14 +963,9 @@ cc.w.view.SlotsNode = cc.Node.extend({//TODO change cc.w.view to cc.w.slots
 	},
 	onEnter:function(){
 		this._super();
-//		this.start();
-//		this.scheduleOnce(function() {
-//			this.start();
-//		}, 3+1+2);
 	},
 	onExit:function(){
 		this._super();
-		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_CYCLED);
 		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_START);
 		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_STOPED);
 		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_SHOW_LINE);

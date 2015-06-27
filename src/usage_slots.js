@@ -2,10 +2,12 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 	_className:"UsageLayerSlots",
 	_slotsNode:null,
 	_slotsController:null,
+	_betNodeController:null,
 	_testLayer:null,
 	_actions:[
 	          //TEST 下面添加的事件主要是为了测试使用者是否能够收到事件
 	          cc.w.slots.EVENT_LINE_SHOWN,
+	          cc.w.slots.EVENT_CHOSEN,
 	          ],
 	ctor:function(){
 		this._super();
@@ -37,24 +39,31 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 //				);//		btn.setAnchorPoint(0.5, 0.5);
 		
 		var btn = new ccui.Button("res/btn1.png");
+		btn.setUserData({"target":this,"data":"123"});
 		btn.attr({
 //			label:new cc.LabelTTF("中国", "Microsoft Yahei", 30),
 //			fontSize:40,
 			x:size.width/2,
-			y:150,
+			y:150+90,
 //			width:200,
 //			height:80,
 //			preferredSize:cc.size(800, 600),
 		});
 		this.addChild(btn);
 //		btn.addTargetWithActionForControlEvents(this, this.drawLine, cc.CONTROL_EVENT_TOUCH_UP_INSIDE);
-		btn.addTouchEventListener(function(target,event){
+		btn.addTouchEventListener(function(view,event){
+			var target = view.getUserData().target;
+			var data = view.getUserData().data;
+//			cc.log("|||||||||||||||||||"+data);
 			if (event==ccui.Widget.TOUCH_ENDED) {
-				this.drawLine();
+				view.getUserData().target.drawLine();
 			}
 		}, this);
 		btn.setTitleFontSize(18);
 		btn.setTitleText("SHOW LINES");
+		
+		
+		
 //		var label = new cc.LabelTTF("中国", "Microsoft Yahei", 40);
 //		label.attr({
 //			x:size.width/2,
@@ -106,7 +115,21 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 		
 		this._slotsController = new cc.w.slots.SlotsController();
 		this._slotsController.init();
+		this._betNodeController = new cc.w.slots.BetNodeController();
 		
+		var betData = new cc.w.slots.BetData();
+		
+		var betBtn1 = this.createBtn(cc.p(60, 130), "res/btn_pink.png", "1",function(target,view,data){
+			this.doBet(target,view,data);
+		});
+//		var betBtn1 = this.createBtn(cc.p(60, 130), "res/btn_pink.png", "1",betNodeController.betSelector());
+		var betBtn2 = this.createBtn(cc.p(60+120, 130), "res/btn_pink.png", "2",function(target,view,data){
+			this.doBet(target,view,data);
+		});
+		//betData,betBtn1,betBtn2,multipleCBs,costLabel1,costLabel2,pondLabel
+		this._betNodeController.init(betData,betBtn1,betBtn2);
+		
+		this._slotsController.addBetNodeController(this._betNodeController);
 //		this._testLayer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
 //		this._testLayer.setContentSize(this.getContentSize());
 //		this.addChild(this._testLayer);
@@ -147,15 +170,46 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 		}else{
 		}
 	},
+	doBet:function(target,view,data){
+		var result = this._betNodeController.doBet();
+		if (result) {
+			cc.log(target,view,data);
+			this._slotsController.getResult();
+		}
+	},
 	handleNotification: function(notification){
 		var notificationName = notification.notificationName;
 		var data = notification.notificationData;
 		switch (notificationName){
 		case cc.w.slots.EVENT_LINE_SHOWN:
-			cc.log("=====EVENT_LINE_SHOWN=====");
+			cc.log("=====EVENT_LINE_SHOWN====="+data);
+			break;
+		case cc.w.slots.EVENT_CHOSEN:
+			cc.log("=====EVENT_CHOSEN=====",data.choice,data.multiple);
 			break;
 		}
 	},
+	
+	createBtn:function(position,imagePath,title,callback){
+    	var btn = new ccui.Button(imagePath);
+    	btn.attr({
+    		x:position.x,
+    		y:position.y,
+    	});
+    	this.addChild(btn);
+    	btn.setUserData({"target":this,"data":"data"});
+    	btn.addTouchEventListener(function(view, event){
+    		if (event==ccui.Widget.TOUCH_ENDED&&callback) {
+    			var target = view.getUserData().target;
+    			var data = view.getUserData().data;
+    			callback.call(target,target,view,data);
+    		}
+    	}, this);
+    	btn.setTitleFontSize(18);
+    	btn.setTitleText(title);
+    	return btn;
+    },
+	
 	_mZOrder:-10,
 	addTouchEventListenser:function(){
 		var touchListener = cc.EventListener.create({
