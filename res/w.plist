@@ -424,7 +424,7 @@
     <key>metadata</key>
     <dict>
       <key>flaxVersion</key>
-      <real>2.32</real>
+      <real>2.33</real>
       <key>fps</key>
       <integer>24</integer>
       <key>format</key>

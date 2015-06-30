@@ -17,12 +17,21 @@ cc.w.slots.CELL_IMAGES = [//图标所有种类的图片，目前有13种
 //                          "res/icon_10.png",
                           "res/icon_a1.png",
                           "res/icon_a2.png",
-                          "res/icon_a3.png",
+                          "res/icon_a3.png"
                           ];
 //全局变量
 cc.w.slots.SLOTS_CELL_NODES = [];//存放所有SlotsCellNode
 cc.w.slots.GROUP_NODE_HEIGHT = 0;
 cc.w.slots.LINE_POINTS = null;//存放所有画线的点。在初始化老虎机是初始化
+//老虎机执行模式，相当于压多少条线，目前只有最少和最多两种，最少为1条，最多（目前）为25条
+cc.w.slots.SLOTS_LOOP_LINES_MIN = 1;//普通模式，花最少的钱
+cc.w.slots.SLOTS_LOOP_LINES_MAX = -1;//加强模式，花最多的钱
+/**
+ * 老虎机阶段，分别为正常阶段和BOSS阶段，默认为普通阶段
+ */
+cc.w.slots.SLOTS_STAGE_NORMAL = 0;
+cc.w.slots.SLOTS_STAGE_BOSS = 1;
+cc.w.slots.STAGE = cc.w.slots.SLOTS_STAGE_NORMAL;
 //老虎机状态
 cc.w.slots.STATE_STOPED = 0;//表示静止
 cc.w.slots.STATE_RUNNING = 1;//表示运行
@@ -36,13 +45,19 @@ cc.w.slots.MODE_DEBUG_SlotsColumnNode = false;//
 cc.w.slots.RESULT = null;//用于保存游戏结果数据，每次运行前会清除
 cc.w.slots.CYCLE_COUNT = 0;//当前（第一列）循环滚动的次数（后面的列也要完成同样次数才能停止）
 //监听的事件
-cc.w.slots.EVENT_START = "cc.w.slots.EVENT_START";//老虎机执行运行事件
+cc.w.slots.EVENT_START = "cc.w.slots.EVENT_START";//老虎机执行运行事件,数据：1为普通攻击，-1为强攻
 cc.w.slots.EVENT_SHOW_LINE = "cc.w.slots.EVENT_SHOW_LINE";//老虎机执行显示线事件
 cc.w.slots.EVENT_RESULT = "cc.w.slots.EVENT_RESULT";//通知老虎机已经有结果，这时机器会自动判断并停止
+cc.w.slots.EVENT_STAGE_CHANGED = "cc.w.slots.EVENT_STAGE_CHANGED";//老虎机阶段变化事件，目前只有两个阶段且不能回退，数据：0/1;0为普通阶段，1为BOSS阶段
+cc.w.slots.EVENT_DO_SPECIAL_EFFECT = "cc.w.slots.EVENT_DO_SPECIAL_EFFECT";//老虎机执行特效事件，数据：1/2;1表示免费次数，2表示加血
+cc.w.slots.EVENT_RESET = "cc.w.slots.EVENT_GAME_RESET";//老虎机重置事件，主要就是把老虎机切换回第一阶段,数据无
 //发出的事件
 cc.w.slots.EVENT_CYCLED = "cc.w.slots.EVENT_CYCLED";//老虎机运行一个循环事件
-cc.w.slots.EVENT_STOPED = "cc.w.slots.EVENT_STOPED";//老虎机停止事件(所有列表都停止后调用)
+cc.w.slots.EVENT_STOPPED = "cc.w.slots.EVENT_STOPPED";//老虎机停止事件(所有列都停止后调用)
 cc.w.slots.EVENT_LINE_SHOWN = "cc.w.slots.EVENT_LINE_SHOWN";//老虎机画一条线并播放线动画结束事件
+cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED = "cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED";//老虎机免费次数执行一次结束，数据无
+cc.w.slots.EVENT_AUTO_LOOP_MODE_CHANGED = "cc.w.slots.EVENT_AUTO_LOOP_MODE_CHANGED";//老虎机自动模式切换事件，数据：true/false;是否是自动执行模式
+cc.w.slots.EVENT_BET_DONE = "cc.w.slots.EVENT_BET_DONE";//用户完成押注事件
 //动画
 /**开始运动动画*/
 cc.w.slots.actionStart = function(){
@@ -67,7 +82,7 @@ cc.w.slots.actionConstant = function(){
 cc.w.slots.actionCellNode = function(){
 	var duration = 0.5; 
 	var a1 = cc.scaleTo(duration, 1.1);
-	var a2 = cc.scaleTo(duration, 1.0);;
+	var a2 = cc.scaleTo(duration, 1.0);
 	return cc.repeatForever(cc.sequence(a1,a2));
 };
 /////////////////////////////////////////////////////////////////////////////////////
@@ -129,12 +144,14 @@ cc.w.slots.Line = cc.Class.extend({
 /**
  * specialEffect "x,...x:y" x为点索引，y为特效类型, 1表示免费次数，2表示加血
  */
+cc.w.slots.SLOTS_SPECIAL_EFFECT_TYPE_FL = 1;//免费次数
+cc.w.slots.SLOTS_SPECIAL_EFFECT_TYPE_BL = 2;//加血
 cc.w.slots.SpecialEffect = cc.Class.extend({
 	type:1,//1表示免费次数，2表示加血
-	linePointIndexs:null,//所有点的索引
+	linePointIndexes:null,//所有点的索引
 	toString:function(){
 		return "\n(SpecialEffect){type="+this.type
-		+";linePointIndexs="+this.linePointIndexs
+		+";linePointIndexes="+this.linePointIndexes
 		+"}"
 	},
 });
@@ -217,7 +234,7 @@ cc.w.slots.LinePoint = cc.Class.extend({
  */
 cc.w.slots.BetData = cc.Class.extend({
 	cost:0,//一次押注要花费的,但最终显示时还要乘以倍数
-	mutiples:[1,2,5],//倍数,默认使用倍数数组中的第一个
+	multiples:[1,2,5],//倍数,默认使用倍数数组中的第一个
 	//前两个参数可能是从房间数据得到的
 	pond:0,//奖池总金额，每次押注会增加金额。
 });
@@ -226,11 +243,17 @@ cc.w.slots.BetData = cc.Class.extend({
  * 老虎机结果对象
  */
 cc.w.slots.Result = cc.Class.extend({
-	stage:0,//阶段,0表示老虎机阶段1表示押注阶段
+	_minLoopCost:0,//普通攻击花费
+	_maxLoopCost:0,//强攻花费
+	stage:0,//阶段,0表示老虎机阶段（普通阶段）1表示押注阶段（BOSS阶段）
+	isAutoLoopMode:false,//是否是自动执行模式
+    loopLines:0,//老虎机执行模式，相当于压多少条线，目前只有最少和最多两种，最少为1条，最多（目前）为25条
 	_images:null,//结果图标集合，目前一共15个位置，共13种图片，ID为1-13
 	_lines:null,//线动画+特效的数据组合在一起就是"x,x,x,x,x:y",x表线的位置，y表示连了几个图标
 	_specialEffects:null,
 	_betData:null,
+	_isFreeLoopMode:null,
+	_freeLoopTime:0,
 	/**
 	 * 因为要计算点与线的关联，所以点被定义为全局变量，用完后要还原
 	 */
@@ -249,6 +272,10 @@ cc.w.slots.Result = cc.Class.extend({
 			}
 		}
 	},
+    setLoopData:function(minLoopCost,maxLoopCost){
+        this._minLoopCost = minLoopCost;
+        this._maxLoopCost = maxLoopCost;
+    },
 	setImages:function(images){
 		this._images = images;
 	},
@@ -271,10 +298,10 @@ cc.w.slots.Result = cc.Class.extend({
 			var pointsDataArray = pointsData.split(":");
 			if (pointsDataArray.length==2) {
 				var se = new cc.w.slots.SpecialEffect();
-				var linePointIndexs = pointsDataArray[0].split(",");
+				var linePointIndexes = pointsDataArray[0].split(",");
 				var type = pointsDataArray[1];
 				se.type = type;
-				se.linePointIndexs = linePointIndexs;
+				se.linePointIndexes = linePointIndexes;
 				this._specialEffects.push(se);
 			}else{
 				cc.w.log.e("cc.w.slots.Result", "老虎机结果数据解析错误")
@@ -296,12 +323,12 @@ cc.w.slots.Result = cc.Class.extend({
 			var lineDataArray = lineData.split(":");
 			if (lineDataArray.length==2) {
 				var line = new cc.w.slots.Line();
-				var linePointIndexs = lineDataArray[0].split(",");
+				var linePointIndexes = lineDataArray[0].split(",");
 				var lineLen = lineDataArray[1];
 				line.len = lineLen;
 				var prePoint = null
-				for (var i = 0; i < linePointIndexs.length; i++) {
-					var idx = linePointIndexs[i];
+				for (var i = 0; i < linePointIndexes.length; i++) {
+					var idx = linePointIndexes[i];
 					var point = cc.w.slots.LINE_POINTS[idx];
 					line.addPoint(point);
 					point.relateToLine(line);
@@ -331,11 +358,21 @@ cc.w.slots.Result = cc.Class.extend({
 		var betData = new cc.w.slots.BetData();
 		betData.pond = pond;
 		betData.cost = cost;
-		betData.mutiples = mutiplesStr.split(",");
+		betData.multiples = mutiplesStr.split(",");
 		this._betData = betData;
 	},
 	getBetData:function(){
 		return this._betData;
+	},
+	setFreeLoopData:function(isFreeLoopMode,freeLoopTime){
+		this._isFreeLoopMode = isFreeLoopMode;
+        this._freeLoopTime = freeLoopTime;
+	},
+	isFreeLoopMode:function(){
+		return this._isFreeLoopMode;
+	},
+	getFreeLoopTime:function(){
+		return this._freeLoopTime;
 	}
 });
 /////////////////////////////////////////////////////////////////////////////////////
@@ -728,12 +765,22 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 	resetCells:function(){
 		if(this._commonGroups!=null)this._commonGroups[1].reset();
 	},
+	onSlotsStoped:function(){//TODO:
+		cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_STOPPED);
+		for (var i = 0; i < cc.w.slots.SLOTS_CELL_NODES.length; i++) {
+			var cellNode = cc.w.slots.SLOTS_CELL_NODES[i];
+//			cc.log(cellNode.getIndex());
+			cellNode.doCellAnimation();
+//			if (cellNode.getIndex()==13) {
+//			cellNode.setVisible(false);
+//			}
+		}
+	},
 	start:function(){
 		//TODO 根据当前状态和是否有结果来判断是否执行动画
 		if (this._state == cc.w.slots.STATE_RUNNING&&this._result!=null) {
 			if (this.getIndex()==cc.w.slots.COLUMN_COUNT-1) {//
-				cc.log("=====EVENT_STOPED=====");
-				cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_STOPED);
+				this.onSlotsStoped();
 			}
 			return;
 		}
@@ -876,7 +923,7 @@ cc.w.view.SlotsNode = cc.Node.extend({//TODO change cc.w.view to cc.w.slots
 
 		var event_stoped = cc.EventListener.create({
 			event: cc.EventListener.CUSTOM,
-			eventName: cc.w.slots.EVENT_STOPED,
+			eventName: cc.w.slots.EVENT_STOPPED,
 			callback: function(event){
 				if (event!=null) {
 					var target = event.getCurrentTarget();
@@ -951,10 +998,6 @@ cc.w.view.SlotsNode = cc.Node.extend({//TODO change cc.w.view to cc.w.slots
 			var seq = cc.sequence(delayTime,callFunc)
 			this.runAction(seq);
 		}
-//			this._columnNodes[4].start(); 
-//		this.scheduleOnce(function() {
-//			cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_RESULT);
-//		}, 3);
 	},
 	stop:function(){
 		for ( var colNode in this._columnNodes) {
@@ -967,7 +1010,7 @@ cc.w.view.SlotsNode = cc.Node.extend({//TODO change cc.w.view to cc.w.slots
 	onExit:function(){
 		this._super();
 		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_START);
-		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_STOPED);
+		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_STOPPED);
 		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_SHOW_LINE);
 	}
 });

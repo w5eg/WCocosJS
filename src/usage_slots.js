@@ -7,7 +7,8 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 	_actions:[
 	          //TEST 下面添加的事件主要是为了测试使用者是否能够收到事件
 	          cc.w.slots.EVENT_LINE_SHOWN,
-	          cc.w.slots.EVENT_CHOSEN,
+	          cc.w.slots.EVENT_STOPPED,
+	          cc.w.slots.EVENT_BET_DONE,
 	          cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED,
 	],
 	handleNotification: function(notification){
@@ -15,13 +16,16 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 		var data = notification.notificationData;
 		switch (notificationName){
 		case cc.w.slots.EVENT_LINE_SHOWN:
-			cc.log("=====EVENT_LINE_SHOWN====="+data);
+			cc.log("=====[EVENT_LINE_SHOWN]====="+data);
 			break;
-		case cc.w.slots.EVENT_CHOSEN:
-			cc.log("=====EVENT_CHOSEN=====",data.choice,data.multiple);
+		case cc.w.slots.EVENT_BET_DONE:
+			cc.log("=====[EVENT_BET_DONE]=====",data.choice,data.multiple);
 			break;
 		case cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED:
-			cc.log("=====EVENT_ON_FREE_LOOP_FINISHED=====");
+			cc.log("=====[EVENT_ON_FREE_LOOP_FINISHED]=====");
+			break;
+		case cc.w.slots.EVENT_STOPPED:
+			cc.log("=====[EVENT_STOPPED]=====");
 			break;
 		}
 	},
@@ -61,7 +65,7 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 //			label:new cc.LabelTTF("中国", "Microsoft Yahei", 30),
 //			fontSize:40,
 			x:size.width/2,
-			y:150+90+30,
+			y:150+90+30+10,
 //			width:200,
 //			height:80,
 //			preferredSize:cc.size(800, 600),
@@ -110,35 +114,38 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 	},
 	_lineIndex:0,
 	drawLine:function(){
-		if (cc.w.slots.RESULT==null||cc.w.slots.RESULT.getLines()==null||cc.w.slots.RESULT.getLines().length==0) {
+		if (cc.w.slots.RESULT==null||cc.w.slots.RESULT.getLines()==null) {
 			return;
 		}
-		if (this._slotsNode!=null) {
-			var lineSize = cc.w.slots.RESULT.getLines().length;
-			ViewFacade.getInstance().notifyObserver(
-					new Notification(cc.w.slots.mappingAction(cc.w.slots.EVENT_SHOW_LINE),this._lineIndex));
-//			this._slotsNode.drawLine(this._lineIndex);
-			this._lineIndex++;
-			if (this._lineIndex>=lineSize) {
-				this._lineIndex = 0;
-			}
-		}
+        var lineSize = cc.w.slots.RESULT.getLines().length;
+        ViewFacade.getInstance().notifyObserver(
+                new Notification(cc.w.slots.mappingAction(cc.w.slots.EVENT_SHOW_LINE),this._lineIndex));
+        this._lineIndex++;
+        if (this._lineIndex>=lineSize) {
+            this._lineIndex = 0;
+        }
 	},
 	setupView:function(){
-// cc.log("UsageLayerSlots setupView");
+
 		this._slotsNode = new cc.w.view.SlotsNode(cc.winSize.width/10*8,cc.winSize.height/3);
 		this._slotsNode.setPosition(this.getContentSize().width/2, this.getContentSize().height/2+100);
 		this.addChild(this._slotsNode);
-		
-		this._slotsController = new cc.w.slots.SlotsController();
-		this._slotsController.init();
-		this._betNodeController = new cc.w.slots.BetNodeController();
-		
-		var betData = new cc.w.slots.BetData();
-		
-		var betBtn1 = this.createBtn(cc.p(60, 130+30), "res/btn_pink.png", "物理",function(target,view,data){
-			this.doBet(target,view,data);
-		});
+
+
+        this.createBtn(cc.p(60, 130+150), "res/btn_bf.png", "free",function(target,view,data){
+            ViewFacade.getInstance().notifyObserver(
+                new Notification(cc.w.slots.EVENT_DO_SPECIAL_EFFECT,10));
+        });
+        this.createBtn(cc.p(this.getContentSize().width-60, 130+150), "res/btn_bf.png", "STAGE",function(target,view,data){
+            var stage = cc.w.slots.STAGE == cc.w.slots.SLOTS_STAGE_NORMAL?cc.w.slots.SLOTS_STAGE_BOSS:cc.w.slots.SLOTS_STAGE_NORMAL;
+            ViewFacade.getInstance().notifyObserver(
+                new Notification(cc.w.slots.EVENT_STAGE_CHANGED,stage));
+        });
+
+
+        var betBtn1 = this.createBtn(cc.p(60, 130+30), "res/btn_pink.png", "物理",function(target,view,data){
+            this.doBet(target,view,data);
+        });
 //		var betBtn1 = flax.assetsManager.createDisplay("res/s.plist", "multiBtn",{parent: this, x:60, y:160});
 //		flax.inputManager = new flax.InputManager();
 //		flax.inputManager.addListener(betBtn1, this._betClick, InputType.click, this);
@@ -146,31 +153,58 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 //			this.doBet(this, betBtn1, null)
 //		}, InputType.click, this);
 //		var betBtn1 = this.createBtn(cc.p(60, 130), "res/btn_pink.png", "1",betNodeController.betSelector());
-		var betBtn2 = this.createBtn(cc.p(60+120, 130+30), "res/btn_pink.png", "魔法",function(target,view,data){
-			this.doBet(target,view,data);
-		});
-		var multipleCBs = new Array();
-		for (var i = 0; i < 3; i++) {
-			multipleCBs.push(
-					this.createBtn(cc.p(60+150+120+120*i, 130+30), "res/btn_blue.png", ""+betData.mutiples[i],function(target,view,data){
-						this.doChooseMultiple(target,view,data);
-					})
-			);
-		}
-		//betData,betBtn1,betBtn2,multipleCBs,costLabel1,costLabel2,pondLabel
-		this._betNodeController.init(betData,betBtn1,betBtn2,multipleCBs);
-		
+        var betBtn2 = this.createBtn(cc.p(60+120, 130+30), "res/btn_pink.png", "魔法",function(target,view,data){
+            this.doBet(target,view,data);
+        });
+        var multipleCBs = new Array();
+        for (var i = 0; i < 3; i++) {
+            multipleCBs.push(
+                this.createBtn(cc.p(60+150+120+120*i, 130+30), "res/btn_blue.png", ""+new cc.w.slots.BetData().multiples[i],function(target,view,data){
+                    this.doChooseMultiple(target,view,data);
+                })
+            );
+        }
+        var costLabel1,costLabel2,pondLabel;
+
+        var slotsView = this._slotsNode,betView = betBtn1;
+
+        //实例化对象，并调用init()方法
+		this._slotsController = new cc.w.slots.SlotsController();
+		this._slotsController.init();
+
+        //添加免费次数控制器
+        var freeLoopController  = new cc.w.slots.SlotsFreeLoopContorller();
+        var minLoopBtn,minLoopCostLabel,minFreeLoopLabel,maxLoopBtn,maxLoopCostLabel,maxFreeLoopLabel;
+        /**
+         * @param minCost 普通攻击花费
+         * @param maxCost 强攻花费
+         * @param minLoopBtn 普通攻击按钮
+         * @param minLoopCostLabel 普通攻击花费LABEL
+         * @param minFreeLoopLabel 免费普通攻击剩余次数LABEL
+         * @param maxLoopBtn 强攻按钮
+         * @param maxLoopCostLabel 强攻花费LABEL
+         * @param maxFreeLoopLabel 免费强攻剩余次数LABEL
+         */
+        freeLoopController.init(100,5000,minLoopCostLabel,minFreeLoopLabel,maxLoopBtn,maxLoopCostLabel,maxFreeLoopLabel);
+        this._slotsController.addSlotsFreeLoopController(freeLoopController);
+
+        //添加押注控制器
+		this._betNodeController = new cc.w.slots.BetNodeController();
+		var betData = new cc.w.slots.BetData();
+		this._betNodeController.init(betData,betBtn1,betBtn2,multipleCBs,costLabel1,costLabel2,pondLabel);
 		this._slotsController.addBetNodeController(this._betNodeController);
-		
-		var sfc = new cc.w.slots.SlotsFreeLoopContorller();
-		sfc.init();//TODO:
-		this._slotsController.addSlotsFreeLoopContorller(sfc);
-		
-		this.createBtn(cc.p(60, 130+150), "res/btn_bf.png", "free",function(target,view,data){
-			ViewFacade.getInstance().notifyObserver(
-					new Notification(cc.w.slots.mappingAction(cc.w.slots.EVENT_START_FREE_LOOP),10));
-		});
-		
+
+        //添加阶段切换控制器
+        var stageController = new cc.w.slots.SlotsStageContorller();
+		/**
+		 * @param slotsView 老虎机组件+老虎机控制器
+		 * @param betView 押注组件+奖池组件
+		 */
+        stageController.init(slotsView,betView);
+        this._slotsController.addSlotsStageController(stageController);
+
+
+
 //		this._testLayer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
 //		this._testLayer.setContentSize(this.getContentSize());
 //		this.addChild(this._testLayer);
@@ -186,7 +220,7 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 // fontDef.fontName = "Arial";
 // fontDef.fontSize = "60";
 // var label = new cc.LabelTTF("wwwww",fontDef);
-		this.addTouchEventListenser();
+		this.addTouchEventListener();
 // setTimeout(fn, interval)
 // cc.director.getScheduler().scheduleCallbackForTarget(this, function(){
 // this.startAction();
@@ -197,6 +231,7 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 	},
 	onExit:function(){
 		this._super();
+        //在对象回收前最好调用一下这个方法，内部主要做的事是移除事件监听
 		this._slotsController.release();
 		for (var i = 0; i < this._actions.length; i++) {
 			var action = this._actions[i];
@@ -245,22 +280,18 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
     	return btn;
     },
     
-    _betClick:function(touch, event){
-    	var btn = event.currentTarget;
-    	this.doBet(this, btn, 0);
-    	cc.log("}}}}}}}}}}}}}}}}:"+btn.isSelected());
-    },
+    //_betClick:function(touch, event){
+    //	var btn = event.currentTarget;
+    //	this.doBet(this, btn, 0);
+    //	cc.log("}}}}}}}}}}}}}}}}:"+btn.isSelected());
+    //},
 	
 	_mZOrder:-10,
-	addTouchEventListenser:function(){
+	addTouchEventListener:function(){
 		var touchListener = cc.EventListener.create({
 			event: cc.EventListener.TOUCH_ONE_BY_ONE,
-			// When "swallow touches" is true, then returning 'true' from the
-			// onTouchBegan method will "swallow" the touch event, preventing
-			// other listeners from using it.
 			swallowTouches: true,
-			// onTouchBegan event callback function
-			onTouchBegan: function (touch, event) { 
+			onTouchBegan: function (touch, event) {
 				return true;
 			},
 			onTouchEnded:function(touch, event){
@@ -274,7 +305,7 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 //					target.reorderChild(target._testLayer, target._mZOrder)
 					return true;
 				}
-			},
+			}
 		});
 		cc.eventManager.addListener(touchListener,this);
 	}

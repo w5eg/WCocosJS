@@ -43,7 +43,7 @@ flax.buttonSound = null;
 flax.frameInterval = 1/60;
 flax._scenesDict = {};
 flax._soundEnabled = true;
-flax._inited = false;
+flax.initialized = false;
 flax._orientationTip = null;
 flax._languageDict = null;
 flax._languageToLoad = null;
@@ -109,8 +109,8 @@ if(!cc.sys.isNative){
  * */
 flax.init = function(resolutionPolicy, initialUserData)
 {
-    if(flax._inited) return;
-    flax._inited = true;
+    if(flax.initialized) return;
+    flax.initialized = true;
     cc.log("Flax inited, version: "+flax.version);
 
     if(resolutionPolicy == null) resolutionPolicy = cc.sys.isMobile ? cc.ResolutionPolicy.NO_BORDER : cc.ResolutionPolicy.SHOW_ALL;
