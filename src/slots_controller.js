@@ -418,7 +418,8 @@ cc.w.slots.SlotsController = cc.Class.extend({
             this.doSpecialEffect(data);
 			break;
 		case cc.w.slots.EVENT_RESULT:
-            if(cc.w.slots.RESULT){
+            if(data){
+                cc.w.slots.RESULT = data;
                 cc.log("=====EVENT_RESULT====="+data);
                 if (cc.w.slots.RESULT.stage == cc.w.slots.SLOTS_STAGE_BOSS&&this._betNodeController!=null) {
                     this._betNodeController.onResult(data.getBetData());

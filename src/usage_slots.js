@@ -136,6 +136,13 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 		this._slotsNode.setPosition(this.getContentSize().width/2, this.getContentSize().height/2+100);
 		this.addChild(this._slotsNode);
 
+		var button = flax.assetsManager.createDisplay("res/w.plist", "AButton",{parent: this, x:60, y:cc.winSize.height-80});
+		button.label.setString("wwwww");
+		flax.inputManager = new flax.InputManager();
+//		flax.inputManager.addListener(button, this._betClick, InputType.click, this);
+		flax.inputManager.addListener(button, function(){
+			this.startAction();
+		}, InputType.click, this);
 		//var btn = new ccui.Button();
 		//btn.attr({
 		//	x:50,
@@ -167,12 +174,8 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
         var betBtn1 = this.createBtn(cc.p(60, 130+30), "res/btn_pink.png", "物理",function(target,view,data){
             this.doBet(target,view,data);
         });
-//		var betBtn1 = flax.assetsManager.createDisplay("res/s.plist", "multiBtn",{parent: this, x:60, y:160});
-//		flax.inputManager = new flax.InputManager();
-//		flax.inputManager.addListener(betBtn1, this._betClick, InputType.click, this);
-//		flax.inputManager.addListener(betBtn1, function(){
-//			this.doBet(this, betBtn1, null)
-//		}, InputType.click, this);
+		
+
 //		var betBtn1 = this.createBtn(cc.p(60, 130), "res/btn_pink.png", "1",betNodeController.betSelector());
         var betBtn2 = this.createBtn(cc.p(60+120, 130+30), "res/btn_pink.png", "魔法",function(target,view,data){
             this.doBet(target,view,data);
@@ -315,7 +318,7 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 	addTouchEventListener:function(){
 		var touchListener = cc.EventListener.create({
 			event: cc.EventListener.TOUCH_ONE_BY_ONE,
-			swallowTouches: true,
+			swallowTouches: false,
 			onTouchBegan: function (touch, event) {
 				return true;
 			},
@@ -368,18 +371,18 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
             var betPond = 0;//BOSS阶段时的奖池数据
 
 
-            cc.w.slots.RESULT = new cc.w.slots.Result();
-            cc.w.slots.RESULT.stage = stage;
-            cc.w.slots.RESULT.setLoopData(minLoopCost,maxLoopCost);
-            cc.w.slots.RESULT.setImagesData(imagesData);
-            cc.w.slots.RESULT.setLinesData(linesData);
-            cc.w.slots.RESULT.setSpecialEffectsData(specialEffectsData);
-            cc.w.slots.RESULT.setBetData(betPond,betCost,betMultiples);
-            cc.w.slots.RESULT.setFreeLoopData(isFreeLoopMode,freeLoopTime);
+            var result = new cc.w.slots.Result();
+            result.stage = stage;
+            result.setLoopData(minLoopCost,maxLoopCost);
+            result.setImagesData(imagesData);
+            result.setLinesData(linesData);
+            result.setSpecialEffectsData(specialEffectsData);
+            result.setBetData(betPond,betCost,betMultiples);
+            result.setFreeLoopData(isFreeLoopMode,freeLoopTime);
 
             //当真正请求数据时最后要调用这句来通知监听者们
             ViewFacade.getInstance().notifyObserver(
-                new Notification(cc.w.slots.mappingAction(cc.w.slots.EVENT_RESULT),cc.w.slots.RESULT));
+                new Notification(cc.w.slots.mappingAction(cc.w.slots.EVENT_RESULT),result));
         }, 2, 0, 0, false);
     }
 });
