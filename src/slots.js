@@ -326,7 +326,7 @@ cc.w.slots.Result = cc.Class.extend({
 				var linePointIndexes = lineDataArray[0].split(",");
 				var lineLen = lineDataArray[1];
 				line.len = lineLen;
-				var prePoint = null
+				var prePoint = null;
 				for (var i = 0; i < linePointIndexes.length; i++) {
 					var idx = linePointIndexes[i];
 					var point = cc.w.slots.LINE_POINTS[idx];
@@ -354,11 +354,11 @@ cc.w.slots.Result = cc.Class.extend({
 	 *betCost = 1000;
 	 *betMultiples = "1,2,5";
 	 */
-	setBetData:function(pond,cost,mutiplesStr){
+	setBetData:function(pond,cost,multiplesStr){
 		var betData = new cc.w.slots.BetData();
 		betData.pond = pond;
 		betData.cost = cost;
-		betData.multiples = mutiplesStr.split(",");
+		betData.multiples = multiplesStr.split(",");
 		this._betData = betData;
 	},
 	getBetData:function(){

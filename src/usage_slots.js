@@ -6,15 +6,20 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 	_testLayer:null,
 	_actions:[
 	          //TEST 下面添加的事件主要是为了测试使用者是否能够收到事件
-	          cc.w.slots.EVENT_LINE_SHOWN,
+	          cc.w.slots.EVENT_START,
 	          cc.w.slots.EVENT_STOPPED,
+	          cc.w.slots.EVENT_LINE_SHOWN,
 	          cc.w.slots.EVENT_BET_DONE,
 	          cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED,
+	          cc.w.slots.EVENT_AUTO_LOOP_MODE_CHANGED,
 	],
 	handleNotification: function(notification){
 		var notificationName = notification.notificationName;
 		var data = notification.notificationData;
 		switch (notificationName){
+		case cc.w.slots.EVENT_START:
+			cc.log("=====[EVENT_START]====="+cc.w.slots.STAGE);
+			break;
 		case cc.w.slots.EVENT_LINE_SHOWN:
 			cc.log("=====[EVENT_LINE_SHOWN]====="+data);
 			break;
@@ -26,6 +31,9 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 			break;
 		case cc.w.slots.EVENT_STOPPED:
 			cc.log("=====[EVENT_STOPPED]=====");
+			break;
+		case cc.w.slots.EVENT_AUTO_LOOP_MODE_CHANGED:
+			cc.log("=====[EVENT_AUTO_LOOP_MODE_CHANGED]====="+data);
 			break;
 		}
 	},
@@ -131,6 +139,20 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 		this._slotsNode.setPosition(this.getContentSize().width/2, this.getContentSize().height/2+100);
 		this.addChild(this._slotsNode);
 
+		//var btn = new ccui.Button();
+		//btn.attr({
+		//	x:50,
+		//	y:50,
+		//});
+		//this.addChild(btn);
+		//btn.setUserData({"target":this,"data":"data"});
+		//btn.addTouchEventListener(function(view, event){
+		//	if (event==ccui.Widget.TOUCH_ENDED&&callback) {
+		//		var target = view.getUserData().target;
+		//		var data = view.getUserData().data;
+		//	}
+		//}, this);
+		//btn.setTitleText("WWWWW");
 
         this.createBtn(cc.p(60, 130+150), "res/btn_bf.png", "free",function(target,view,data){
             ViewFacade.getInstance().notifyObserver(
@@ -156,7 +178,7 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
         var betBtn2 = this.createBtn(cc.p(60+120, 130+30), "res/btn_pink.png", "魔法",function(target,view,data){
             this.doBet(target,view,data);
         });
-        var multipleCBs = new Array();
+        var multipleCBs = [];
         for (var i = 0; i < 3; i++) {
             multipleCBs.push(
                 this.createBtn(cc.p(60+150+120+120*i, 130+30), "res/btn_blue.png", ""+new cc.w.slots.BetData().multiples[i],function(target,view,data){
@@ -243,6 +265,7 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 		if (cc.w.slots.STATE==cc.w.slots.STATE_STOPED) {
 			ViewFacade.getInstance().notifyObserver(
 					new Notification(cc.w.slots.mappingAction(cc.w.slots.EVENT_START,0)));
+            this.testResult();
 		}else{
 		}
 	},
@@ -250,7 +273,7 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 		var result = this._betNodeController.doBet(view);
 		if (result) {
 			cc.log(target,view,data);
-			this._slotsController.getResult();
+			this.testResult();
 		}
 	},
 	doChooseMultiple:function(target,view,data){
@@ -308,7 +331,55 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 			}
 		});
 		cc.eventManager.addListener(touchListener,this);
-	}
+	},
+    testResult:function(){
+        cc.director.getScheduler().scheduleCallbackForTarget(this, function(){
+
+            var minLoopCost = 100;//普通攻击花费
+            var maxLoopCost = 5000;//强攻花费
+            var betCost = 1000;//BOSS阶段的每次押注要花费的金额
+            var betMultiples = "1,2,5";//BOSS阶段的押注倍数
+
+
+            var stage = 1;//0,1,当前阶段，0为普通阶段，1为BOSS阶段
+            var freeLoopTime = 0;//剩余免费次数
+            var isFreeLoopMode = false;//是否是免费次数模式
+            var isAutoLoopMode = false;//是否是自动执行模式
+            var loopLines = 1;//压多少条线,只有两种，1是普通为1条线，-1是强攻，表示25条线(目前)
+
+            var imagesData = //图标数据，用“,”分隔的图标ID
+                "1,1,1,1,1,"+
+                "2,2,2,2,2,"+
+                "3,3,3,3,3";
+            var linesData = //线数据，用“:”分隔为两部分，前部分为图标数据，后部分为星级数据
+                [
+                    "0,1,2,3,4:5",
+                    "5,6,7,8,9:5",
+                    "10,11,12,13,14:5"
+                ];
+            var specialEffectsData =//特效数据，用“:”分隔为两部分，前部分为图标数据;后部分为星级数据，1表示免费次数，2表示加血
+                [
+                    "0,1,7,13,14:1",
+                    "5,11,7,13,9:2"
+                ];
+
+            var betPond = 0;//BOSS阶段时的奖池数据
+
+
+            cc.w.slots.RESULT = new cc.w.slots.Result();
+            cc.w.slots.RESULT.stage = stage;
+            cc.w.slots.RESULT.setLoopData(minLoopCost,maxLoopCost);
+            cc.w.slots.RESULT.setImagesData(imagesData);
+            cc.w.slots.RESULT.setLinesData(linesData);
+            cc.w.slots.RESULT.setSpecialEffectsData(specialEffectsData);
+            cc.w.slots.RESULT.setBetData(betPond,betCost,betMultiples);
+            cc.w.slots.RESULT.setFreeLoopData(isFreeLoopMode,freeLoopTime);
+
+            //当真正请求数据时最后要调用这句来通知监听者们
+            ViewFacade.getInstance().notifyObserver(
+                new Notification(cc.w.slots.mappingAction(cc.w.slots.EVENT_RESULT),cc.w.slots.RESULT));
+        }, 2, 0, 0, false);
+    }
 });
 
 

@@ -165,10 +165,10 @@ cc.w.CollisionLayer = cc.LayerColor.extend({
 		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
 		layer.setContentSize(cellSize, cellSize);
 		layer.ignoreAnchorPointForPosition(false);
-		layer.setAnchorPoint(cc.p(0.5, 0.5));
+		layer.setAnchorPoint(0.5, 0.5);
 		return layer;
 	},
-	onEixt:function(){
+	onExit:function(){
 		this._super();
 		cc.eventManager.removeListener(this.eventListener);  
 	},
@@ -652,33 +652,6 @@ cc.w.WLoaderScene.preload = function(resources, cb){
 	cc.director.runScene(_cc.loaderScene);
 	return _cc.loaderScene;
 };
-cc.w.DemoLayer = cc.Layer.extend({
-	ctor:function(){
-		this._super();
-		var layer = new cc.LayerColor(cc.color(55,55,55));
-		this.addChild(layer);
-		this.setupView();
-	},
-	setupView:function(){
-		var size = cc.winSize;
-		var closeItem = new cc.MenuItemImage(
-				res.CloseNormal_png,
-				res.CloseSelected_png,
-				function () {
-					cc.log("Menu is clicked!");
-				}, this);
-		closeItem.attr({
-			x: size.width-60,
-			y: 60,
-			anchorX: 0.5,
-			anchorY: 0.5
-		});
-		var menu = new cc.Menu(closeItem);
-		menu.x = 0;
-		menu.y = 0;
-		this.addChild(menu, 1);
-	}
-});
 
 /**
  * 用例页面基础页面，提供返回按钮和背景色
@@ -711,6 +684,40 @@ cc.w.view.UsageBaseLayer = cc.Layer.extend({
 		this.addChild(menu);
 	},
 });
+cc.w.view.addLongPressListener = function(target){//TODO:
+	var l = cc.EventListener.create({
+		event: cc.EventListener.TOUCH_ONE_BY_ONE,
+		swallowTouches: true,                       // 设置是否吞没事件，在 onTouchBegan 方法返回 true 时吞掉事件，不再向下传递。
+		onTouchBegan: function (touch, event) {     //实现 onTouchBegan 事件处理回调函数
+			var target = event.getCurrentTarget();  // 获取事件所绑定的 target, 通常是cc.Node及其子类
+			target.setLocalZOrder(100);
+			// 获取当前触摸点相对于按钮所在的坐标
+			var locationInNode = target.convertToNodeSpace(touch.getLocation());
+			var s = target.getContentSize();
+			var rect = cc.rect(0, 0, s.width, s.height);
+
+			if (cc.rectContainsPoint(rect, locationInNode)) {       // 判断触摸点是否在按钮范围内
+				cc.log("sprite began... x = " + locationInNode.x + ", y = " + locationInNode.y);
+				target.opacity = 180;
+				return true;
+			}
+			return false;
+		},
+		onTouchMoved: function (touch, event) {         //实现onTouchMoved事件处理回调函数, 触摸移动时触发
+			// 移动当前按钮精灵的坐标位置
+			var target = event.getCurrentTarget();
+			var delta = touch.getDelta();              //获取事件数据: delta
+			target.x += delta.x;
+			target.y += delta.y;
+		},
+		onTouchEnded: function (touch, event) {         // 实现onTouchEnded事件处理回调函数
+			var target = event.getCurrentTarget();
+			cc.log("sprite onTouchesEnded.. ");
+			target.setOpacity(255);
+			target.setLocalZOrder(0);
+		}
+	});
+};
 //function ArrayList()
 //{
 //	this.index = -1;
