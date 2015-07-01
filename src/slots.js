@@ -45,19 +45,22 @@ cc.w.slots.MODE_DEBUG_SlotsColumnNode = false;//
 cc.w.slots.RESULT = null;//用于保存游戏结果数据，每次运行前会清除
 cc.w.slots.CYCLE_COUNT = 0;//当前（第一列）循环滚动的次数（后面的列也要完成同样次数才能停止）
 //监听的事件
+cc.w.slots.EVENT_INIT = "cc.w.slots.EVENT_INIT";//老虎机执行运行事件,数据：cc.w.slots.Result对象
 cc.w.slots.EVENT_START = "cc.w.slots.EVENT_START";//老虎机执行运行事件,数据：1为普通攻击，-1为强攻
-cc.w.slots.EVENT_SHOW_LINE = "cc.w.slots.EVENT_SHOW_LINE";//老虎机执行显示线事件
-cc.w.slots.EVENT_RESULT = "cc.w.slots.EVENT_RESULT";//通知老虎机已经有结果，这时机器会自动判断并停止
+cc.w.slots.EVENT_SHOW_LINE = "cc.w.slots.EVENT_SHOW_LINE";//老虎机执行显示线事件，数据：线数据在线数据数组中的索引
+cc.w.slots.EVENT_RESULT = "cc.w.slots.EVENT_RESULT";//老虎机得到结果，数据：cc.w.slots.Result对象
 cc.w.slots.EVENT_STAGE_CHANGED = "cc.w.slots.EVENT_STAGE_CHANGED";//老虎机阶段变化事件，目前只有两个阶段且不能回退，数据：0/1;0为普通阶段，1为BOSS阶段
-cc.w.slots.EVENT_DO_SPECIAL_EFFECT = "cc.w.slots.EVENT_DO_SPECIAL_EFFECT";//老虎机执行特效事件，数据：1/2;1表示免费次数，2表示加血
+cc.w.slots.EVENT_DO_SPECIAL_EFFECT = "cc.w.slots.EVENT_DO_SPECIAL_EFFECT";//老虎机执行特效事件，数据：0/1，表示特效事件列表索引
 cc.w.slots.EVENT_RESET = "cc.w.slots.EVENT_GAME_RESET";//老虎机重置事件，主要就是把老虎机切换回第一阶段,数据无
 //发出的事件
 cc.w.slots.EVENT_CYCLED = "cc.w.slots.EVENT_CYCLED";//老虎机运行一个循环事件
 cc.w.slots.EVENT_STOPPED = "cc.w.slots.EVENT_STOPPED";//老虎机停止事件(所有列都停止后调用)
 cc.w.slots.EVENT_LINE_SHOWN = "cc.w.slots.EVENT_LINE_SHOWN";//老虎机画一条线并播放线动画结束事件
+cc.w.slots.EVENT_ON_EFFECT_FINISHED = "cc.w.slots.EVENT_ON_EFFECT_FINISHED";//老虎机一次效果执行结束，发给中心用，有三个事件：画线结束，免费次数动画结束，加血动画结束，数据无
 cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED = "cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED";//老虎机免费次数执行一次结束，数据无
+cc.w.slots.EVENT_ON_BLOOD_INCREASE_FINISHED = "cc.w.slots.EVENT_ON_BLOOD_INCREASE_FINISHED";//老虎机加血特效执行一次结束，数据无
 cc.w.slots.EVENT_AUTO_LOOP_MODE_CHANGED = "cc.w.slots.EVENT_AUTO_LOOP_MODE_CHANGED";//老虎机自动模式切换事件，数据：true/false;是否是自动执行模式
-cc.w.slots.EVENT_BET_DONE = "cc.w.slots.EVENT_BET_DONE";//用户完成押注事件
+cc.w.slots.EVENT_BET_DONE = "cc.w.slots.EVENT_BET_DONE";//用户完成押注事件,数据：{"choice":value,"multiple":multiple}，choice为0/1，multiple为当前倍数值
 //动画
 /**开始运动动画*/
 cc.w.slots.actionStart = function(){

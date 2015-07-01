@@ -5,420 +5,24 @@
       <key>w_000000</key>
       <dict>
         <key>frame</key>
-        <string>{{0,0},{459,460}}</string>
+        <string>{{0,127},{122,122}}</string>
         <key>offset</key>
         <string>{0.00,0.00}</string>
         <key>rotated</key>
         <false/>
         <key>sourceSize</key>
-        <string>{457,458}</string>
+        <string>{120,120}</string>
       </dict>
       <key>w_000001</key>
       <dict>
         <key>frame</key>
-        <string>{{0,460},{452,454}}</string>
-        <key>offset</key>
-        <string>{-0.20,-0.30}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000002</key>
-      <dict>
-        <key>frame</key>
-        <string>{{0,914},{445,446}}</string>
-        <key>offset</key>
-        <string>{0.25,-0.25}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000003</key>
-      <dict>
-        <key>frame</key>
-        <string>{{0,1360},{437,437}}</string>
-        <key>offset</key>
-        <string>{-0.20,-0.30}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000004</key>
-      <dict>
-        <key>frame</key>
-        <string>{{437,1360},{427,427}}</string>
-        <key>offset</key>
-        <string>{-0.05,-0.45}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000005</key>
-      <dict>
-        <key>frame</key>
-        <string>{{445,914},{416,416}}</string>
-        <key>offset</key>
-        <string>{0.20,-0.70}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000006</key>
-      <dict>
-        <key>frame</key>
-        <string>{{452,460},{403,404}}</string>
-        <key>offset</key>
-        <string>{0.10,-0.10}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000007</key>
-      <dict>
-        <key>frame</key>
-        <string>{{459,0},{394,393}}</string>
-        <key>offset</key>
-        <string>{0.60,-0.60}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000008</key>
-      <dict>
-        <key>frame</key>
-        <string>{{853,0},{379,379}}</string>
-        <key>offset</key>
-        <string>{0.70,-1.20}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000009</key>
-      <dict>
-        <key>frame</key>
-        <string>{{855,379},{363,363}}</string>
-        <key>offset</key>
-        <string>{0.95,-1.45}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000010</key>
-      <dict>
-        <key>frame</key>
-        <string>{{861,742},{346,347}}</string>
-        <key>offset</key>
-        <string>{1.25,-1.25}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000011</key>
-      <dict>
-        <key>frame</key>
-        <string>{{864,1089},{327,328}}</string>
-        <key>offset</key>
-        <string>{1.25,-1.25}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000012</key>
-      <dict>
-        <key>frame</key>
-        <string>{{864,1417},{309,308}}</string>
-        <key>offset</key>
-        <string>{1.30,-1.30}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000013</key>
-      <dict>
-        <key>frame</key>
-        <string>{{1173,1417},{287,288}}</string>
-        <key>offset</key>
-        <string>{2.00,-2.00}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000014</key>
-      <dict>
-        <key>frame</key>
-        <string>{{1191,1089},{266,267}}</string>
-        <key>offset</key>
-        <string>{1.80,-1.80}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000015</key>
-      <dict>
-        <key>frame</key>
-        <string>{{1207,742},{243,244}}</string>
-        <key>offset</key>
-        <string>{2.20,-2.20}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000016</key>
-      <dict>
-        <key>frame</key>
-        <string>{{1218,379},{219,220}}</string>
-        <key>offset</key>
-        <string>{2.75,-2.75}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000017</key>
-      <dict>
-        <key>frame</key>
-        <string>{{1232,0},{194,194}}</string>
-        <key>offset</key>
-        <string>{3.35,-2.85}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000018</key>
-      <dict>
-        <key>frame</key>
-        <string>{{1606,290},{164,167}}</string>
-        <key>offset</key>
-        <string>{3.15,-3.15}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000019</key>
-      <dict>
-        <key>frame</key>
-        <string>{{1570,145},{169,145}}</string>
-        <key>offset</key>
-        <string>{2.70,-3.50}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000020</key>
-      <dict>
-        <key>frame</key>
-        <string>{{1512,1644},{169,145}}</string>
-        <key>offset</key>
-        <string>{2.70,-3.50}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000021</key>
-      <dict>
-        <key>frame</key>
-        <string>{{1232,194},{169,145}}</string>
-        <key>offset</key>
-        <string>{2.70,-3.50}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000022</key>
-      <dict>
-        <key>frame</key>
-        <string>{{1343,1705},{169,145}}</string>
-        <key>offset</key>
-        <string>{2.70,-3.50}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000023</key>
-      <dict>
-        <key>frame</key>
-        <string>{{1401,194},{169,145}}</string>
-        <key>offset</key>
-        <string>{2.70,-3.50}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000024</key>
-      <dict>
-        <key>frame</key>
-        <string>{{1426,0},{169,145}}</string>
-        <key>offset</key>
-        <string>{2.70,-3.50}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000025</key>
-      <dict>
-        <key>frame</key>
-        <string>{{1437,339},{169,145}}</string>
-        <key>offset</key>
-        <string>{2.70,-3.50}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000026</key>
-      <dict>
-        <key>frame</key>
-        <string>{{1437,484},{169,145}}</string>
-        <key>offset</key>
-        <string>{2.70,-3.50}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000027</key>
-      <dict>
-        <key>frame</key>
-        <string>{{1460,1499},{169,145}}</string>
-        <key>offset</key>
-        <string>{2.70,-3.50}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000028</key>
-      <dict>
-        <key>frame</key>
-        <string>{{1450,774},{169,145}}</string>
-        <key>offset</key>
-        <string>{2.70,-3.50}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000029</key>
-      <dict>
-        <key>frame</key>
-        <string>{{1450,919},{169,145}}</string>
-        <key>offset</key>
-        <string>{2.70,-3.50}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000030</key>
-      <dict>
-        <key>frame</key>
-        <string>{{1457,1064},{169,145}}</string>
-        <key>offset</key>
-        <string>{2.70,-3.50}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000031</key>
-      <dict>
-        <key>frame</key>
-        <string>{{1457,1209},{169,145}}</string>
-        <key>offset</key>
-        <string>{2.70,-3.50}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000032</key>
-      <dict>
-        <key>frame</key>
-        <string>{{1460,1354},{169,145}}</string>
-        <key>offset</key>
-        <string>{2.70,-3.50}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000033</key>
-      <dict>
-        <key>frame</key>
-        <string>{{1450,629},{169,145}}</string>
-        <key>offset</key>
-        <string>{2.70,-3.50}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000034</key>
-      <dict>
-        <key>frame</key>
-        <string>{{1173,1705},{170,145}}</string>
-        <key>offset</key>
-        <string>{3.20,-3.50}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{457,458}</string>
-      </dict>
-      <key>w_000035</key>
-      <dict>
-        <key>frame</key>
-        <string>{{1595,0},{140,145}}</string>
+        <string>{{0,0},{127,127}}</string>
         <key>offset</key>
         <string>{0.00,0.00}</string>
         <key>rotated</key>
         <false/>
         <key>sourceSize</key>
-        <string>{138,143}</string>
-      </dict>
-      <key>w_000036</key>
-      <dict>
-        <key>frame</key>
-        <string>{{0,1797},{170,27}}</string>
-        <key>offset</key>
-        <string>{0.00,0.00}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{168,25}</string>
-      </dict>
-      <key>w_000037</key>
-      <dict>
-        <key>frame</key>
-        <string>{{437,1787},{65,65}}</string>
-        <key>offset</key>
-        <string>{0.00,0.00}</string>
-        <key>rotated</key>
-        <false/>
-        <key>sourceSize</key>
-        <string>{63,63}</string>
+        <string>{125,125}</string>
       </dict>
     </dict>
     <key>metadata</key>
@@ -432,63 +36,100 @@
       <key>realTextureFileName</key>
       <string>w.png</string>
       <key>size</key>
-      <string>{1860,1860}</string>
+      <string>{228,328}</string>
       <key>textureFileName</key>
       <string>w.png</string>
     </dict>
     <key>displays</key>
     <dict>
-      <key>ani1</key>
-      <dict>
-        <key>type</key>
-        <string>null</string>
-        <key>anchorX</key>
-        <real>0.50985</real>
-        <key>anchorY</key>
-        <real>0.49127</real>
-        <key>start</key>
-        <integer>0</integer>
-        <key>end</key>
-        <integer>34</integer>
-      </dict>
       <key>asset1</key>
       <dict>
         <key>type</key>
         <string>null</string>
         <key>anchorX</key>
-        <real>0.50725</real>
+        <real>-0.01667</real>
         <key>anchorY</key>
-        <real>0.49650</real>
+        <real>1.02500</real>
         <key>start</key>
-        <integer>35</integer>
+        <integer>0</integer>
         <key>end</key>
-        <integer>35</integer>
+        <integer>0</integer>
       </dict>
-      <key>asset3</key>
+      <key>asset2</key>
       <dict>
         <key>type</key>
         <string>null</string>
         <key>anchorX</key>
-        <real>0.50298</real>
+        <real>-0.01600</real>
         <key>anchorY</key>
-        <real>0.60400</real>
+        <real>1.02400</real>
         <key>start</key>
-        <integer>36</integer>
+        <integer>1</integer>
         <key>end</key>
-        <integer>36</integer>
+        <integer>1</integer>
       </dict>
-      <key>asset4</key>
+    </dict>
+    <key>mcs</key>
+    <dict>
+      <key>AButton</key>
       <dict>
         <key>type</key>
-        <string>null</string>
+        <string>button</string>
+        <key>totalFrames</key>
+        <integer>2</integer>
+        <key>rect</key>
+        <string>0,0,255.00,167.15</string>
         <key>anchorX</key>
-        <real>0.50794</real>
+        <real>0.00000</real>
         <key>anchorY</key>
-        <real>0.49206</real>
-        <key>start</key>
-        <integer>37</integer>
-        <key>end</key>
-        <integer>37</integer>
+        <real>0.76578</real>
+        <key>children</key>
+        <dict>
+          <key>i4479</key>
+          <dict>
+            <key>class</key>
+            <string>asset2</string>
+            <key>zIndex</key>
+            <integer>0</integer>
+            <key>frames</key>
+            <string>null|0.00,128.00,0.00,1.00000,1.00000,1.00,0,0.00,0.00</string>
+          </dict>
+          <key>i4450</key>
+          <dict>
+            <key>class</key>
+            <string>asset1</string>
+            <key>zIndex</key>
+            <integer>0</integer>
+            <key>frames</key>
+            <string>0.00,128.00,0.00,1.00000,1.00000,1.00,0,0.00,0.00|null</string>
+          </dict>
+          <key>i4452</key>
+          <dict>
+            <key>class</key>
+            <string>null</string>
+            <key>zIndex</key>
+            <integer>2</integer>
+            <key>frames</key>
+            <string>125.00,167.15,0.00,1.00000,1.00000,1.00,2,0.00,0.00,Arial Bold,30,#FFFFFF,center,130,56|</string>
+            <key>text</key>
+            <string/>
+            <key>input</key>
+            <false/>
+          </dict>
+          <key>label</key>
+          <dict>
+            <key>class</key>
+            <string>null</string>
+            <key>zIndex</key>
+            <integer>1</integer>
+            <key>frames</key>
+            <string>0.00,80.00,0.00,1.00000,1.00000,1.00,1,0.00,0.00,ＭＳ Ｐゴシック,24,#FFFFFF,center,127,31|</string>
+            <key>text</key>
+            <string>按钮</string>
+            <key>input</key>
+            <false/>
+          </dict>
+        </dict>
       </dict>
     </dict>
   </dict>

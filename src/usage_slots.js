@@ -8,9 +8,8 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 	          //TEST 下面添加的事件主要是为了测试使用者是否能够收到事件
 	          cc.w.slots.EVENT_START,
 	          cc.w.slots.EVENT_STOPPED,
-	          cc.w.slots.EVENT_LINE_SHOWN,
 	          cc.w.slots.EVENT_BET_DONE,
-	          cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED,
+	          cc.w.slots.EVENT_ON_EFFECT_FINISHED,
 	          cc.w.slots.EVENT_AUTO_LOOP_MODE_CHANGED,
 	],
 	handleNotification: function(notification){
@@ -20,14 +19,11 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 		case cc.w.slots.EVENT_START:
 			cc.log("=====[EVENT_START]====="+cc.w.slots.STAGE);
 			break;
-		case cc.w.slots.EVENT_LINE_SHOWN:
-			cc.log("=====[EVENT_LINE_SHOWN]====="+data);
-			break;
 		case cc.w.slots.EVENT_BET_DONE:
 			cc.log("=====[EVENT_BET_DONE]=====",data.choice,data.multiple);
 			break;
-		case cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED:
-			cc.log("=====[EVENT_ON_FREE_LOOP_FINISHED]=====");
+		case cc.w.slots.EVENT_ON_EFFECT_FINISHED:
+			cc.log("=====[EVENT_ON_EFFECT_FINISHED]=====");
 			break;
 		case cc.w.slots.EVENT_STOPPED:
 			cc.log("=====[EVENT_STOPPED]=====");
@@ -133,6 +129,7 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
             this._lineIndex = 0;
         }
 	},
+	_seIdx:0,
 	setupView:function(){
 
 		this._slotsNode = new cc.w.view.SlotsNode(cc.winSize.width/10*8,cc.winSize.height/3);
@@ -154,9 +151,11 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 		//}, this);
 		//btn.setTitleText("WWWWW");
 
-        this.createBtn(cc.p(60, 130+150), "res/btn_bf.png", "free",function(target,view,data){
+        this.createBtn(cc.p(60, 130+150), "res/btn_bf.png", "SE",function(target,view,data){
+        	target._seIdx++;
+        	target._seIdx = target._seIdx>1?0:target._seIdx;
             ViewFacade.getInstance().notifyObserver(
-                new Notification(cc.w.slots.EVENT_DO_SPECIAL_EFFECT,10));
+            		new Notification(cc.w.slots.EVENT_DO_SPECIAL_EFFECT,target._seIdx));
         });
         this.createBtn(cc.p(this.getContentSize().width-60, 130+150), "res/btn_bf.png", "STAGE",function(target,view,data){
             var stage = cc.w.slots.STAGE == cc.w.slots.SLOTS_STAGE_NORMAL?cc.w.slots.SLOTS_STAGE_BOSS:cc.w.slots.SLOTS_STAGE_NORMAL;
@@ -209,7 +208,10 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
          */
         freeLoopController.init(100,5000,minLoopCostLabel,minFreeLoopLabel,maxLoopBtn,maxLoopCostLabel,maxFreeLoopLabel);
         this._slotsController.addSlotsFreeLoopController(freeLoopController);
-
+        //添加加血特效控制器
+        var bloodIncreaseEffectController = new cc.w.slots.SlotsBloodIncreaseEffectController();
+        bloodIncreaseEffectController.init();
+        this._slotsController.addSlotsBloodIncreaseEffectController(bloodIncreaseEffectController);
         //添加押注控制器
 		this._betNodeController = new cc.w.slots.BetNodeController();
 		var betData = new cc.w.slots.BetData();

@@ -14,7 +14,7 @@ cc.w.slots.mappingAction = function(action){
 };
 
 /**
- * 老虎机阶段控制器
+ * 老虎机阶段控制器,接收事件，不发送事件
  */
 cc.w.slots.SlotsStageContorller = cc.Class.extend({
 	_stage:cc.w.slots.STAGE,
@@ -52,7 +52,8 @@ cc.w.slots.SlotsStageContorller = cc.Class.extend({
 	}
 });
 /**
- * 自动播放控制器
+ * 自动播放控制器 ,不接收事件，发送事件
+ * TODO: 长按事件实现，发送事件
  */
 cc.w.slots.SlotsAutoLoopContorller = cc.Class.extend({
 	_isRunning:false,
@@ -71,7 +72,33 @@ cc.w.slots.SlotsAutoLoopContorller = cc.Class.extend({
 	}
 });
 /**
- * 免费次数控制器，主要用来做动画。会根据init()方法传来的两个按钮来设置界面（添加按钮下面的文本，和免费次数文本）
+ * 加血特效控制器,接收事件，发送事件
+ */
+cc.w.slots.SlotsBloodIncreaseEffectController = cc.Class.extend({
+	_isRunning:false,
+	init:function(){
+	},
+    /**
+     * 执行加血特效动画
+     * @param {cc.w.slots.SpecialEffect}specialEffect
+     */
+    doEffect:function(specialEffect){
+        if (this._isRunning) {
+            return;
+        }
+        this._isRunning = true;
+        cc.log("=====DO BloodIncreaseEffect=====");
+        //TEST
+        //播放动画并在结束后执行广播
+        cc.director.getScheduler().scheduleCallbackForTarget(this, function(){
+            this._isRunning = false;
+            cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_ON_BLOOD_INCREASE_FINISHED);
+        }, 2, 0, 0, false);
+        //END TEST
+    }
+});
+/**
+ * 免费次数控制器，用来做动画。,接收事件，发送事件
  */
 cc.w.slots.SlotsFreeLoopContorller = cc.Class.extend({
 	_isRunning:false,
@@ -102,9 +129,10 @@ cc.w.slots.SlotsFreeLoopContorller = cc.Class.extend({
 	},
     /**
      * 执行免费次数动画
-     * @param leftTime 剩余免费次数
+     * @param {Number}leftTime 剩余免费次数
+     * @param {cc.w.slots.SpecialEffect}specialEffect
      */
-	doFreeLoop:function(leftTime){
+	doFreeLoop:function(leftTime,specialEffect){
 		if (this._isRunning) {
 			return;
 		}
@@ -167,7 +195,7 @@ cc.w.slots.SlotsFreeLoopContorller = cc.Class.extend({
     }
 });
 /**
- * 押注机控制器，可以押两个结果，并可以设置三种倍率，并有一个奖池
+ * 押注机控制器，可以押两个结果，并可以设置三种倍率，并有一个奖池 ,不接收事件，发送事件
  * 使用时通过调用 init()方法来传入相关组件。
  * 按钮器为每个按钮提供的点击回调方法。需要在使用都为每个按钮添加对应的回调方法
  */
@@ -197,7 +225,7 @@ cc.w.slots.BetNodeController = cc.Class.extend({
 		this.updateView(betData);
 	},
 	updateView:function(betData){
-		if (betData==null){
+		if (betData==null||betData.multiples==null){
 			return;
 		}
         if(this._costLabel1!=null&&this._costLabel2!=null){
@@ -285,7 +313,7 @@ cc.w.slots.BetNodeController = cc.Class.extend({
 			}
 		}
 		cc.log("=====DO ChooseMultiple=====",index);
-	},
+	}
 });
 /**
  * 老虎机状态控制器,关联老虎机相关组件，并进行统一管理：统一的事件处理与转发
@@ -296,12 +324,14 @@ cc.w.slots.SlotsController = cc.Class.extend({
 	initialized:false,
 	_betNodeController:null,
 	_slotsFreeLoopController:null,
+	_slotsBloodIncreaseEffectController:null,
     _slotsStageController:null,
 	_actions:[
 	          cc.w.slots.EVENT_START,
 	          cc.w.slots.EVENT_SHOW_LINE,
 	          cc.w.slots.EVENT_DO_SPECIAL_EFFECT,
               cc.w.slots.EVENT_STAGE_CHANGED,
+              cc.w.slots.EVENT_INIT,
 	          cc.w.slots.EVENT_RESULT
 	          ],
 	addBetNodeController:function(betNodeController){
@@ -309,6 +339,9 @@ cc.w.slots.SlotsController = cc.Class.extend({
 	},
 	addSlotsFreeLoopController:function(slotsFreeLoopController){
 		this._slotsFreeLoopController = slotsFreeLoopController;
+	},
+	addSlotsBloodIncreaseEffectController:function(slotsBloodIncreaseEffectController){
+		this._slotsBloodIncreaseEffectController = slotsBloodIncreaseEffectController;
 	},
 	addSlotsStageController:function(slotsStageController){
 		this._slotsStageController = slotsStageController;
@@ -325,18 +358,27 @@ cc.w.slots.SlotsController = cc.Class.extend({
 		
 		//增加停止事件转发
 		this.addCustomEventListener(cc.w.slots.EVENT_STOPPED,null);
-		//增加画线完成事件转发
+        this.addCustomEventListener(cc.w.slots.EVENT_BET_DONE,null);
+        //增加完成事件转发,这三个事件，给中心时都转化为cc.w.slots.EVENT_ON_EFFECT_FINISHED
 		this.addCustomEventListener(cc.w.slots.EVENT_LINE_SHOWN,null);
-		this.addCustomEventListener(cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED,null);
-		this.addCustomEventListener(cc.w.slots.EVENT_BET_DONE,null);
+        this.addCustomEventListener(cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED,null);
+        this.addCustomEventListener(cc.w.slots.EVENT_ON_BLOOD_INCREASE_FINISHED,null);
 	},
 	addCustomEventListener:function(eventName,callback){
 		cc.eventManager.addCustomListener(eventName, function(event){ 
 			if (event!=null) {
 //				var target = event.getCurrentTarget();
 				var data = event.getUserData();
-				ViewFacade.getInstance().notifyObserver(
-						new Notification(cc.w.slots.mappingAction(eventName),data));
+                if(eventName==cc.w.slots.EVENT_LINE_SHOWN
+                    ||eventName==cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED
+                    ||eventName==cc.w.slots.EVENT_ON_BLOOD_INCREASE_FINISHED
+                ){
+                    ViewFacade.getInstance().notifyObserver(
+                        new Notification(cc.w.slots.mappingAction(cc.w.slots.EVENT_ON_EFFECT_FINISHED),data));
+                }else{
+                    ViewFacade.getInstance().notifyObserver(
+                        new Notification(cc.w.slots.mappingAction(eventName),data));
+                }
 				if (callback!=null) {
 					callback.call(this,event);
 				}
@@ -349,12 +391,18 @@ cc.w.slots.SlotsController = cc.Class.extend({
 			ViewFacade.getInstance().removeObserver(action, this);
 		}
 		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_STOPPED);
+		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_BET_DONE);
 		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_LINE_SHOWN);
+		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED);
+		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_ON_BLOOD_INCREASE_FINISHED);
 	},
 	handleNotification: function(notification){
 		var notificationName = notification.notificationName;
 		var data = notification.notificationData;
 		switch (notificationName){
+		case cc.w.slots.EVENT_INIT:
+			this.initSlots(data);
+			break;
 		case cc.w.slots.EVENT_START:
 			this.start();
 			break;
@@ -363,14 +411,11 @@ cc.w.slots.SlotsController = cc.Class.extend({
 			break;
 		case cc.w.slots.EVENT_STAGE_CHANGED:
             //cc.log("=====EVENT_STAGE_CHANGED====="+data);
-            if(this._slotsStageController){
-                this._slotsStageController.updateState(data);
-            }
+            this.updateSlotsStage(data);
 			break;
 		case cc.w.slots.EVENT_DO_SPECIAL_EFFECT:
-//			cc.log("=====START_FREE_LOOP====="+data);
-            if(this._slotsFreeLoopController)
-                this._slotsFreeLoopController.doFreeLoop(data);
+			cc.log("=====EVENT_DO_SPECIAL_EFFECT====="+data);
+            this.doSpecialEffect(data);
 			break;
 		case cc.w.slots.EVENT_RESULT:
             if(cc.w.slots.RESULT){
@@ -386,9 +431,49 @@ cc.w.slots.SlotsController = cc.Class.extend({
 			break;
 		}
 	},
+    /**
+     * 初始化界面操作，根据当前阶段来做切换状态操作，根据数据来更新老虎机和押注界面
+     * @param data cc.w.slots.Result
+     */
+    initSlots:function(data){
+        if(data==null){
+            return;
+        }
+        this.updateSlotsStage(data.stage);
+        if(this._betNodeController){
+            this._betNodeController.updateView(data);
+        }
+        if(this._slotsFreeLoopController){
+            this._slotsFreeLoopController.updateView(data._freeLoopTime,data.loopLines,data._minLoopCost,data._maxLoopCost);
+        }
+    },
 	start:function(data){
 		if (cc.w.slots.STAGE == cc.w.slots.SLOTS_STAGE_NORMAL&&cc.w.slots.STATE==cc.w.slots.STATE_STOPED) {
 			cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_START);
 		}
-	}
+	},
+    updateSlotsStage:function(data){
+        if(this._slotsStageController){
+            this._slotsStageController.updateState(data);
+        }
+    },
+    /**
+     * 执行特效，一共两个特效，
+     * @param {Number}effectIndex 特效索引
+     */
+    doSpecialEffect:function(effectIndex){
+        var result = cc.w.slots.RESULT;
+        if(result&&effectIndex<result.getSpecialEffects().length) {
+            //cc.w.slots.SpecialEffect;
+            var se = result.getSpecialEffects()[effectIndex];
+            if (se.type == cc.w.slots.SLOTS_SPECIAL_EFFECT_TYPE_FL) {
+                if(this._slotsBloodIncreaseEffectController){
+                    this._slotsBloodIncreaseEffectController.doEffect(se);
+                }
+            } else {
+                if (this._slotsFreeLoopController)
+                    this._slotsFreeLoopController.doFreeLoop(result.getFreeLoopTime(),se);
+            }
+        }
+    }
 });
