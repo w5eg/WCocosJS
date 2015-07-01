@@ -692,7 +692,7 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 //		this.setAnchorPoint(0.5, 0.5);
 //		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
 //		layer.setContentSize(this.getContentSize());
-//		this.addClipedChild(layer);
+//		this.addClippedChild(layer);
 		this.setupView();
 	},
 	setupView:function(){
@@ -705,7 +705,6 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 		var groupHeight = this.getContentSize().height;
 		this._groupHeight = groupHeight;
 		for (var i = 0; i < groupCount; i++) {
-			Array.prototype.map;
 			var group = new cc.w.view.SlotsCellGroupNode(this._index,groupWidth,groupHeight);
 //			group.setColIndex(this._index);
 			if (i==0) {
@@ -718,7 +717,7 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 			
 //			group.setOpacity(5);
 			group.setPosition(0, this.getContentSize().height*2-i*groupHeight);
-			this.addClipedChild(group);
+			this.addClippedChild(group);
 			if (cc.w.slots.MODE_DEBUG_SlotsColumnNode) {
 				var label = new cc.LabelTTF("Group"+i,"Arial",30);
 				label.setTag(1003);
@@ -732,7 +731,7 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 	updateView:function(){
 		this._commonGroups[0].updateView();
 	},
-	addClipedChild:function(child){
+	addClippedChild:function(child){
 		if (cc.w.slots.MODE_DEBUG) {
 			this.addChild(child);
 		}else{
