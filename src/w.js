@@ -7,6 +7,7 @@ cc.w = cc.w||{};
 /**视图组件包名*/
 cc.w.view = {};
 cc.w.layout = {};
+cc.w.net = {};
 cc.w.usage = {};
 cc.w.log = {};
 cc.w.log.e = function(tag,msg){

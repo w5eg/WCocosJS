@@ -53,7 +53,6 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
 		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
 		this.addChild(layer);
 		this.setupView();
-		
 		var keyboardListener = cc.EventListener.create({
 			event: cc.EventListener.KEYBOARD,
 //			onKeyPressed:  function(keyCode, event){
@@ -132,9 +131,41 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
 		var menu = new cc.Menu(menuItems);
 		menu.alignItemsVertically();
 		this.addChild(menu);
+		this.testWebSocket();
 	},
 	menuItemCallback:function (sender) {
 //		cc.director.end();
 		cc.w.usage.pushUsageScene(sender.getTag())
-	}, 
+	},
+	testWebSocket:function(){
+//		var ws = new WebSocket("ws://192.168.1.199:3000");
+//		ws.onopen = function(evt) {
+//			cc.log("WS was opened.");
+//		};
+//		var l = cc.w.net.WebSocketEventListener.create({
+//			onOpen:function(){
+//				cc.log("=====www[ON OPEN]=====");
+//			},
+//		});
+//		l.onOpen();
+		var self = this;
+        //alert("open");
+        var listener = cc.w.net.WebSocketEventListener.create({
+            onOpen:function(webSocket){
+                cc.log("=====[onOpen]=====");
+                webSocket.send("wwwwwwww");
+			},
+			onMessage:function(webSocket,data){
+				cc.log("=====[onMessage]====="+data);
+//				webSocket.close();
+			},
+			onError:function(webSocket){
+				cc.log("=====[onError]=====");
+			},
+			onClose:function(webSocket){
+				cc.log("=====[onClose]=====");
+			}
+		});
+		var ws = cc.w.net.WebSocket.create(listener,"ws://192.168.1.199:3000");
+	}
 });
