@@ -94,11 +94,17 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
 //		var winSize = cc.visibleRect;
 //		var ani = flax.assetsManager.createDisplay("res/w.plist", "asset3", {parent: this, x: winSize.width/2, y: winSize.height/2, fps:60});
 //		ani.play();
-		cc.director.getScheduler().scheduleCallbackForTarget(this, function(){
-			 this._bgImage.stopAllActions();
-//			 this._bgImage.getCamera().restore(); 
+
+		cc.director.getScheduler().schedule(function(){
+//			 this._bgImage.getCamera().restore();
 //			 this._bgImage.cleanup();
-		 }, 2, false, 0, false);
+		},this, 2, 0, 0, false,this.__instanceId+"");
+        var retryTimer = cc.w.util.RetryTimer.create(this,5,2);
+        retryTimer.start(function(leftTime){
+            this._bgImage.stopAllActions();
+            cc.log("leftTime="+leftTime);
+        });
+//        retryTimer.stop();
 	},
 	setupView:function(){
 		this._nodeGrid = new cc.NodeGrid();
@@ -153,7 +159,7 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
         var listener = cc.w.net.WebSocketEventListener.create({
             onOpen:function(webSocket){
                 cc.log("=====[onOpen]=====");
-                webSocket.send("wwwwwwww");
+                self.sendData(webSocket);
 			},
 			onMessage:function(webSocket,data){
 				cc.log("=====[onMessage]====="+data);
@@ -167,5 +173,10 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
 			}
 		});
 		var ws = cc.w.net.WebSocket.create(listener,"ws://192.168.1.199:3000");
+        ws.enableReconnection(this,5,3);
+        ws.connect();
+	},
+	sendData:function(ws){
+		ws.send("wwwwwwww");
 	}
 });

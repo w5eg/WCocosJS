@@ -4,6 +4,7 @@
  * 注意:有时上面的问题可能是没有关联相关的JS文件导致的。关联文件的顺序也可能会有影响。
  */
 cc.w = cc.w||{};
+cc.w.util = {};
 /**视图组件包名*/
 cc.w.view = {};
 cc.w.layout = {};
@@ -12,6 +13,57 @@ cc.w.usage = {};
 cc.w.log = {};
 cc.w.log.e = function(tag,msg){
 	cc.log("#####ERROR"+"("+tag+"):"+msg);
+};
+cc.w.util.RetryTimer = cc.Class.extend({
+    _isRunning:false,
+    _times:0,
+    _leftTimes:0,
+    _interval:3,
+    _target:null,
+    _key:null,
+    init:function(target,times,interval){
+        if(target)
+            this._key = target.__instanceId+this.__instanceId+"";
+        this._target = target;
+        this._times = times;
+        this._interval = interval;
+        this.reset();
+    },
+    getLeftTimes:function(){
+        return this._leftTimes;
+    },
+    start:function(callback){
+        if(typeof callback !== "function"){
+            return false;
+        }
+        if(!this._target||this._isRunning||this._leftTimes==0){
+            return false;
+        }
+        var repeat = 0;
+        var delay = 0;
+        var paused = false;
+        var self = this;
+        cc.director.getScheduler().schedule(function(){
+            self._leftTimes--;
+        	self._isRunning = false;
+            callback.call(self._target,self._leftTimes);
+        }, this._target, this._interval, repeat, delay, paused, this._key);
+        this._isRunning = true;
+    },
+    reset:function(){
+        this._leftTimes = this._times;
+        this._isRunning = false;
+    },
+    stop:function(){
+        this.reset();
+        if(this._key&&this._target)
+            cc.director.getScheduler().unschedule(this._key,this._target);
+    }
+});
+cc.w.util.RetryTimer.create = function(target,times,interval){
+    var instance = new cc.w.util.RetryTimer();
+    instance.init(target,times,interval);
+    return instance;
 };
 cc.w.layout.testNode = function(node){
 	var nodeParent = node.getParent();
