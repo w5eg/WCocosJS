@@ -472,8 +472,8 @@ cc.w.slots.LinesNode = cc.Node.extend({//TODO
 			//END TEST
 			//TODO 转化linePoint to cc.p()数组，并画线
 		}
-//		this._drawNode.drawCardinalSpline(positions, 1, 100, lineSize, cc.color(255, 255, 255, 255));
-		this._drawNode.drawCardinalSpline(positions, 1, 100, lineSize*0.5, cc.color(255, 0, 255, 255*0.7));
+		this._drawNode.drawCardinalSpline(positions, 1, 100, lineSize, cc.color(255, 255, 255, 255));
+//		this._drawNode.drawCardinalSpline(positions, 1, 100, lineSize*0.5, cc.color(255, 0, 255, 255*0.7));
 		
 		var action1 = cc.blink(1, 3);
 		var callback = cc.callFunc(this.onLineShown, this);
@@ -762,12 +762,12 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 		this._cycleCount = 0;
 		this._result = null;
 		this._state = cc.w.slots.STATE_STOPED;
-		this.ajust();
+		this.adjust();
 	},
 	resetCells:function(){
 		if(this._commonGroups!=null)this._commonGroups[1].reset();
 	},
-	onSlotsStoped:function(){//TODO:
+	onSlotsStopped:function(){//TODO:
 		cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_STOPPED);
 		for (var i = 0; i < cc.w.slots.SLOTS_CELL_NODES.length; i++) {
 			var cellNode = cc.w.slots.SLOTS_CELL_NODES[i];
@@ -779,10 +779,10 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 		}
 	},
 	start:function(){
-		//TODO 根据当前状态和是否有结果来判断是否执行动画
+		//如果当前是运行状态并且有结果数据则的停止运行
 		if (this._state == cc.w.slots.STATE_RUNNING&&this._result!=null) {
-			if (this.getIndex()==cc.w.slots.COLUMN_COUNT-1) {//
-				this.onSlotsStoped();
+			if (this.getIndex()==cc.w.slots.COLUMN_COUNT-1) {//当最后一列也停止后，表示整个老虎机停止
+				this.onSlotsStopped();
 			}
 			return;
 		}
@@ -795,7 +795,7 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 		}
 		
 //		cc.log("wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"+cc.w.slots.STATE);
-		this.ajust();
+		this.adjust();
 		for (var i = 0; i < this._groups.length; i++) {
 			var group = this._groups[i];
 			var action ;
@@ -827,7 +827,7 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 	/**
 	 * 因为动画使用的是moveBy,所以第一个循环做一次位置校正 TO-DO:考虑使用moveTo,计算具体坐标，并传参数给动画方法
 	 */
-	ajust:function(){
+	adjust:function(){
 		if (this._commonGroups==null) {
 			return;
 		}
@@ -923,7 +923,7 @@ cc.w.view.SlotsNode = cc.Node.extend({//TODO change cc.w.view to cc.w.slots
 			}
 		}
 
-		var event_stoped = cc.EventListener.create({
+		var event_stopped = cc.EventListener.create({
 			event: cc.EventListener.CUSTOM,
 			eventName: cc.w.slots.EVENT_STOPPED,
 			callback: function(event){
@@ -934,7 +934,7 @@ cc.w.view.SlotsNode = cc.Node.extend({//TODO change cc.w.view to cc.w.slots
 				}
 			}
 		});    
-		cc.eventManager.addListener(event_stoped, this);
+		cc.eventManager.addListener(event_stopped, this);
 		//--------------
 		var event_start = cc.EventListener.create({
 			event: cc.EventListener.CUSTOM,
