@@ -22,10 +22,12 @@ cc.w.net.WebSocketEventListener = cc.Class.extend({
 });
 cc.w.net.WebSocketEventListener.create = function(argObj){
 	var instance =  new cc.w.net.WebSocketEventListener();
-	if(argObj.onOpen)instance.onOpen = argObj.onOpen;
-	if(argObj.onMessage)instance.onMessage = argObj.onMessage;
-	if(argObj.onError)instance.onError = argObj.onError;
-	if(argObj.onClose)instance.onClose = argObj.onClose;
+    if(argObj){
+        if(argObj.onOpen)instance.onOpen = argObj.onOpen;
+        if(argObj.onMessage)instance.onMessage = argObj.onMessage;
+        if(argObj.onError)instance.onError = argObj.onError;
+        if(argObj.onClose)instance.onClose = argObj.onClose;
+    }
 	return instance;
 };
 /**
