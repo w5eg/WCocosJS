@@ -138,6 +138,9 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
 		menu.alignItemsVertically();
 		this.addChild(menu);
 		this.testWebSocket();
+		
+		
+		cc.w.slots.doLineAnimation(100,this,this.getContentSize.width/2,this.getContentSize().height/2);
 	},
 	menuItemCallback:function (sender) {
 //		cc.director.end();

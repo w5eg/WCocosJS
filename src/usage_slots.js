@@ -4,6 +4,7 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 	_slotsController:null,
 	_betNodeController:null,
 	_testLayer:null,
+	toString:function(){return "#####UsageLayerSlots"},
 	_actions:[
 	          //TEST 下面添加的事件主要是为了测试使用者是否能够收到事件
 	          cc.w.slots.EVENT_START,
@@ -18,6 +19,7 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 		switch (notificationName){
 		case cc.w.slots.EVENT_START:
 			cc.log("=====[EVENT_START]====="+cc.w.slots.STAGE);
+			cc.log("=====[ttt]====="+this.addChild(data[0]));
 			break;
 		case cc.w.slots.EVENT_BET_DONE:
 			cc.log("=====[EVENT_BET_DONE]=====",data.choice,data.multiple);
@@ -132,17 +134,23 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 	_seIdx:0,
 	setupView:function(){
 
-		this._slotsNode = new cc.w.view.SlotsNode(cc.winSize.width/10*8,cc.winSize.height/3);
+		this._slotsNode = new cc.w.view.SlotsNode(cc.winSize.width,cc.winSize.width/5*3);
 		this._slotsNode.setPosition(this.getContentSize().width/2, this.getContentSize().height/2+100);
 		this.addChild(this._slotsNode);
 
-		var button = flax.assetsManager.createDisplay("res/w.plist", "AButton",{parent: this, x:60, y:cc.winSize.height-80});
+		var button = flax.assetsManager.createDisplay("res/w.plist", "AButton",{parent: this, x:60, y:cc.winSize.height-30});
 		button.label.setString("wwwww");
 		flax.inputManager = new flax.InputManager();
-//		flax.inputManager.addListener(button, this._betClick, InputType.click, this);
 		flax.inputManager.addListener(button, function(){
 			this.startAction();
 		}, InputType.click, this);
+
+		//var cellNodeAni = flax.assetsManager.createDisplay("res/anis.plist", "slotsCellNodeAni", {
+		//	parent: this,
+		//	x: 0,
+		//	y: 0
+		//});
+		//cellNodeAni.play();
 		//var btn = new ccui.Button();
 		//btn.attr({
 		//	x:50,
@@ -230,8 +238,6 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
         stageController.init(slotsView,betView);
         this._slotsController.addSlotsStageController(stageController);
 
-
-
 //		this._testLayer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
 //		this._testLayer.setContentSize(this.getContentSize());
 //		this.addChild(this._testLayer);
@@ -269,7 +275,7 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 		cc.log("state==================="+cc.w.slots.STATE);
 		if (cc.w.slots.STATE==cc.w.slots.STATE_STOPED) {
 			ViewFacade.getInstance().notifyObserver(
-					new Notification(cc.w.slots.mappingAction(cc.w.slots.EVENT_START,0)));
+					new Notification(cc.w.slots.mappingAction(cc.w.slots.EVENT_START),[new ccui.Button("res/btn1.png")]));
             this.testResult();
 		}else{
 		}
@@ -342,6 +348,8 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 
             var minLoopCost = 100;//普通攻击花费
             var maxLoopCost = 5000;//强攻花费
+            
+            var betPond = 0;//BOSS阶段时的奖池数据
             var betCost = 1000;//BOSS阶段的每次押注要花费的金额
             var betMultiples = "1,2,5";//BOSS阶段的押注倍数
 
@@ -356,20 +364,17 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
                 "1,1,1,1,1,"+
                 "2,2,2,2,2,"+
                 "3,3,3,3,3";
-            var linesData = //线数据，用“:”分隔为两部分，前部分为位置索引，从0-14，后部分为星级数据
+            var linesData = //线数据，用“:”分隔为三部分，第一部分为位置索引，从0-14;第二部分为星级数据;第三部分为线分数
                 [
-                    "0,1,2,3,4:5",
-                    "5,6,7,8,9:5",
-                    "10,11,12,13,14:5"
+                    "0,1,2,3,4:2:10",
+                    "5,6,7,8,9:3:30",
+                    "10,11,12,13,14:4:100"
                 ];
             var specialEffectsData =//特效数据，用“:”分隔为两部分，前部分为位置索引，从0-14;后部分为星级数据，1表示免费次数，2表示加血
                 [
                     "0,1,7,13,14:1",
                     "5,11,7,13,9:2"
                 ];
-
-            var betPond = 0;//BOSS阶段时的奖池数据
-
 
             var result = new cc.w.slots.Result();
             result.stage = stage;
