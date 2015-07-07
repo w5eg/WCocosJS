@@ -3,7 +3,7 @@
  * BUG:如果编译不过。可能并没有错误，找到相关的类。稍微加个字符再删除，重新保存一下，再运行可能就好了。
  * 注意:有时上面的问题可能是没有关联相关的JS文件导致的。关联文件的顺序也可能会有影响。
  */
-cc.w = cc.w||{};
+cc.w = {};
 cc.w.util = {};
 /**视图组件包名*/
 cc.w.view = {};
@@ -738,20 +738,19 @@ cc.w.view.UsageBaseLayer = cc.Layer.extend({
 	},
 });
 cc.w.view.addLongPressListener = function(target){//TODO:
+	var startTime = 0+999;
 	var l = cc.EventListener.create({
 		event: cc.EventListener.TOUCH_ONE_BY_ONE,
 		swallowTouches: true,                       // 设置是否吞没事件，在 onTouchBegan 方法返回 true 时吞掉事件，不再向下传递。
 		onTouchBegan: function (touch, event) {     //实现 onTouchBegan 事件处理回调函数
 			var target = event.getCurrentTarget();  // 获取事件所绑定的 target, 通常是cc.Node及其子类
-			target.setLocalZOrder(100);
 			// 获取当前触摸点相对于按钮所在的坐标
 			var locationInNode = target.convertToNodeSpace(touch.getLocation());
 			var s = target.getContentSize();
 			var rect = cc.rect(0, 0, s.width, s.height);
-
+			cc.log("wwwwwwwwww:"+startTime);
 			if (cc.rectContainsPoint(rect, locationInNode)) {       // 判断触摸点是否在按钮范围内
 				cc.log("sprite began... x = " + locationInNode.x + ", y = " + locationInNode.y);
-				target.opacity = 180;
 				return true;
 			}
 			return false;
@@ -770,6 +769,29 @@ cc.w.view.addLongPressListener = function(target){//TODO:
 			target.setLocalZOrder(0);
 		}
 	});
+	cc.eventManager.addListener(l,target);
+};
+var utf8 = utf8||{};
+utf8.toByteArray = function(str) {
+	var byteArray = [];
+	for (var i = 0; i < str.length; i++)
+		if (str.charCodeAt(i) <= 0x7F)
+			byteArray.push(str.charCodeAt(i));
+		else {
+			var h = encodeURIComponent(str.charAt(i)).substr(1).split('%');
+			for (var j = 0; j < h.length; j++)
+				byteArray.push(parseInt(h[j], 16));
+		}
+	return byteArray;
+};
+utf8.parse = function(byteArray) {
+	var str = '';
+	for (var i = 0; i < byteArray.length; i++)
+		str +=  byteArray[i] <= 0x7F?
+			byteArray[i] === 0x25 ? "%25" : // %
+				String.fromCharCode(byteArray[i]) :
+		"%" + byteArray[i].toString(16).toUpperCase();
+	return decodeURIComponent(str);
 };
 //function ArrayList()
 //{

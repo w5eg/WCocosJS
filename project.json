@@ -1,8 +1,8 @@
 {
     "version":1.0,
     "gameId":"WCocosJS",
-    "width":640,
-    "height":960,
+    "width":720,
+    "height":1280,
     "landscape":false,
     "rotateImg":"res/rotate.png",
     "language":"zh",

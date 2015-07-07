@@ -218,10 +218,11 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
          * @param maxFreeLoopLabel 免费强攻剩余次数LABEL
          */
         freeLoopController.init(100,5000,minLoopCostLabel,minFreeLoopLabel,maxLoopBtn,maxLoopCostLabel,maxFreeLoopLabel);
+        freeLoopController.initAnimation(this,cc.p(this.getContentSize().width/2,this.getContentSize().height/2),this._slotsNode);
         this._slotsController.addSlotsFreeLoopController(freeLoopController);
         //添加加血特效控制器
         var bloodIncreaseEffectController = new cc.w.slots.SlotsBloodIncreaseEffectController();
-        bloodIncreaseEffectController.init();
+        bloodIncreaseEffectController.init(this,cc.p(this.getContentSize().width/2,this.getContentSize().height/2),this._slotsNode);
         this._slotsController.addSlotsBloodIncreaseEffectController(bloodIncreaseEffectController);
         //添加押注控制器
 		this._betNodeController = new cc.w.slots.BetNodeController();
@@ -366,9 +367,11 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
                 "3,3,3,3,3";
             var linesData = //线数据，用“:”分隔为三部分，第一部分为位置索引，从0-14;第二部分为星级数据;第三部分为线分数
                 [
-                    "0,1,2,3,4:2:10",
-                    "5,6,7,8,9:3:30",
-                    "10,11,12,13,14:4:100"
+                    "0,1,2,3,4:2:11",
+                    "5,6,7,8,9:3:31",
+                    "10,11,12,13,14:5:100",
+                    "0,1,7,13,14:2:21",
+                    "5,11,7,13,9:4:41"
                 ];
             var specialEffectsData =//特效数据，用“:”分隔为两部分，前部分为位置索引，从0-14;后部分为星级数据，1表示免费次数，2表示加血
                 [

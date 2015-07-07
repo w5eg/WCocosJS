@@ -128,7 +128,7 @@ cc.w.slots.getLineAnimationLevel = function(score){
 		level = 5;
 	return level;
 };
-cc.w.slots.doLineAnimation = function(score,parentNode,x,y){
+cc.w.slots.doLineAnimation = function(score,parentNode,x,y,callBackOnAniOver,target){
     var level = cc.w.slots.getLineAnimationLevel(score);
     if(level<=0){
     	return;
@@ -140,8 +140,42 @@ cc.w.slots.doLineAnimation = function(score,parentNode,x,y){
 		x: x,
 		y: y
 	});
-    //ani.autoDestroyWhenOver = true;
+    ani.autoDestroyWhenOver = true;
+    if(callBackOnAniOver&&target){
+        ani.onAnimationOver.add(callBackOnAniOver, target);
+    }
     ani.gotoAndPlay(aniName);
+    return ani;
+};
+cc.w.slots.doBloodAddAnimation = function(level,parentNode,x,y,callBackOnAniOver,target){
+    if(level<=0){
+    	return;
+    }
+    var aniName = "bloodAddAni"+level;
+    cc.log("PLAY BIG ANI:"+aniName);
+    var ani = flax.assetsManager.createDisplay("res/anis.plist", "bloodAddAnis", {
+		parent: parentNode,
+		x: x,
+		y: y
+	});
+    ani.autoDestroyWhenOver = true;
+    if(callBackOnAniOver&&target){
+        ani.onAnimationOver.add(callBackOnAniOver, target);
+    }
+    ani.gotoAndPlay(aniName);
+    return ani;
+};
+cc.w.slots.doFreeTimesAnimation = function(times,parentNode,x,y,callBackOnAniOver,target){
+    var ani = flax.assetsManager.createDisplay("res/anis.plist", "freeTimesAni", {
+		parent: parentNode,
+		x: x,
+		y: y
+	});
+    ani.autoDestroyWhenOver = true;
+    if(callBackOnAniOver&&target){
+        ani.onAnimationOver.add(callBackOnAniOver, target);
+    }
+    ani.play();
     return ani;
 };
 /**
@@ -185,13 +219,29 @@ cc.w.slots.Line = cc.Class.extend({
 cc.w.slots.SLOTS_SPECIAL_EFFECT_TYPE_FL = 1;//免费次数
 cc.w.slots.SLOTS_SPECIAL_EFFECT_TYPE_BL = 2;//加血
 cc.w.slots.SpecialEffect = cc.Class.extend({
-	type:1,//1表示免费次数，2表示加血
 	linePointIndexes:null,//所有点的索引
 	toString:function(){
 		return "\n(SpecialEffect){type="+this.type
 		+";linePointIndexes="+this.linePointIndexes
 		+"}"
 	},
+    type:1,//1表示免费次数，2表示加血
+    getLevel:function(){//目前免费次数和加血的逻辑是一样的
+        var len = 0;
+        if(this.linePointIndexes){
+            len = this.linePointIndexes.length;
+        }
+        switch (len){
+            case 3:
+                return 1;
+            case 4:
+                return 2;
+            case 5:
+                return 3;
+            default :
+                return 0;
+        }
+    }//表示加血等级
 });
 /**
  * 组成线的点对象
@@ -506,7 +556,7 @@ cc.w.slots.LinesNode = cc.Node.extend({//TODO
 			var point = line.getPoints()[i];
             if(i<line.len){
                 var cellNode = cc.w.slots.SLOTS_CELL_NODES[point.index];
-                cellNode.doCellAnimation(this,point.getRect().x-50,point.getRect().y+50);
+                cellNode.doCellAnimation(this);
             }
 			//TEST
 			var pos = 
@@ -524,15 +574,18 @@ cc.w.slots.LinesNode = cc.Node.extend({//TODO
 		
 		var action1 = cc.blink(1, 3);
 		var callback = cc.callFunc(this.onLineShown, this);
-		var seq = cc.sequence(action1,callback);
+		var seq = cc.sequence(callback,action1);
 		this._drawNode.runAction(seq);
 //		var action = cc.fadeOut(0.5);
 //		this._drawNode.runAction(cc.repeat(cc.sequence(action,action.reverse()),-1));
 	},
 	onLineShown:function(){
-		this._drawNode.setVisible(false);
-        cc.w.slots.stopAllCellAnimations();
-		cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_LINE_SHOWN,this._currentLineIndex);
+        var line = cc.w.slots.RESULT.getLines()[this._currentLineIndex];
+        cc.w.slots.doLineAnimation(line.score,this,this.getContentSize().width/2,this.getContentSize().height/2,function(view){
+            this._drawNode.setVisible(false);
+            cc.w.slots.stopAllCellAnimations();
+            cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_LINE_SHOWN,this._currentLineIndex);
+        },this);
 	},
 	createRectStencil:function(size,height){
 		var stencil = new cc.DrawNode();
@@ -601,8 +654,11 @@ cc.w.view.SlotsCellNode = cc.Node.extend({
 		this._index = index;
 	},
     _aniParent:null,
-	doCellAnimation:function(parent,x,y){
+	doCellAnimation:function(parent){
         this._aniParent = parent;
+        var point = cc.w.slots.LINE_POINTS[this._index];
+        var x = point.getRect().x-35;
+        var y = point.getRect().y+35;
         if(this._cellNodeAni==null) {
             this._cellNodeAni = flax.assetsManager.createDisplay("res/anis.plist", "slotsCellNodeAni", {
                 parent: parent,

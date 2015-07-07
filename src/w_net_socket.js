@@ -164,3 +164,13 @@ cc.w.net.WebSocket.create = function(l,url,protocols){
 	instance.init(l,url,protocols);
 	return instance;
 };
+//cc.w.net.DataWapper = cc.Class.extend({
+//    process:function(data){
+//        return data;
+//    }
+//});
+cc.w.net.Request = cc.Class.extend({
+    getData:function(){
+
+    }
+});

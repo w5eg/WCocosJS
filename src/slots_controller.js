@@ -76,25 +76,54 @@ cc.w.slots.SlotsAutoLoopContorller = cc.Class.extend({
  */
 cc.w.slots.SlotsBloodIncreaseEffectController = cc.Class.extend({
 	_isRunning:false,
-	init:function(){
+    _parentNode:null,
+    _position:null,
+    _slotsNode:null,
+    /**
+     * @param parentNode
+     * @param position
+     * @param {cc.w.slots.SlotsNode}slotsNode
+     */
+	init:function(parentNode,position,slotsNode){
+        this._parentNode = parentNode;
+        this._position = position;
+        this._slotsNode = slotsNode;
 	},
     /**
      * 执行加血特效动画
      * @param {cc.w.slots.SpecialEffect}specialEffect
      */
     doEffect:function(specialEffect){
-        if (this._isRunning) {
+        if (specialEffect==null||this._isRunning||this._parentNode==null||this._position==null||this._slotsNode==null) {
+            cc.w.log.e("cc.w.slots.SlotsBloodIncreaseEffectController","doEffect params error");
+            cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_ON_BLOOD_INCREASE_FINISHED);
             return;
         }
         this._isRunning = true;
         cc.log("=====DO BloodIncreaseEffect=====");
-        //TEST
+ 
         //播放动画并在结束后执行广播
-        cc.director.getScheduler().scheduleCallbackForTarget(this, function(){
-            this._isRunning = false;
-            cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_ON_BLOOD_INCREASE_FINISHED);
-        }, 2, 0, 0, false);
-        //END TEST
+        if(specialEffect.linePointIndexes.length>0){
+            for(var i=0;i<specialEffect.linePointIndexes.length;i++){
+                var cellIdx = specialEffect.linePointIndexes[i];
+                var cellNode = cc.w.slots.SLOTS_CELL_NODES[cellIdx];
+                cellNode.doCellAnimation(this._slotsNode._linesNode);
+            }
+        }
+		//cc.director.getScheduler().scheduleCallbackForTarget(this, function(){
+		    this._isRunning = false;
+		    cc.w.slots.doBloodAddAnimation(specialEffect.getLevel(),this._parentNode,this._position.x,this._position.y,function(view){
+		    	this._isRunning = false;
+		    	cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_ON_BLOOD_INCREASE_FINISHED);
+		    	if(specialEffect.linePointIndexes.length>0){
+		    		for(var i=0;i<specialEffect.linePointIndexes.length;i++){
+		    			var cellIdx = specialEffect.linePointIndexes[i];
+		    			var cellNode = cc.w.slots.SLOTS_CELL_NODES[cellIdx];
+		    			cellNode.reset();
+		    		}
+		    	}
+		    },this);
+		//}, 0.35, 0, 0, false);
     }
 });
 /**
@@ -108,6 +137,10 @@ cc.w.slots.SlotsFreeLoopContorller = cc.Class.extend({
     _maxLoopBtn:null,
     _maxLoopCostLabel:null,
     _maxFreeLoopLabel:null,
+    
+    _parentNode:null,
+    _position:null,
+    _slotsNode:null,
     /**
      * @param minCost 普通攻击花费
      * @param maxCost 强攻花费
@@ -127,26 +160,55 @@ cc.w.slots.SlotsFreeLoopContorller = cc.Class.extend({
         this._maxFreeLoopLabel = maxFreeLoopLabel;
         this.updateView(0,0,minCost,maxCost);
 	},
+	initAnimation:function(parentNode,position,slotsNode){
+		this._parentNode = parentNode;
+		this._position = position;
+		this._slotsNode = slotsNode;
+	},
     /**
      * 执行免费次数动画
      * @param {Number}leftTime 剩余免费次数
      * @param {cc.w.slots.SpecialEffect}specialEffect
      */
 	doFreeLoop:function(leftTime,specialEffect){
-		if (this._isRunning) {
+		if (specialEffect==null||this._isRunning||this._parentNode==null||this._position==null||this._slotsNode==null) {
+			cc.w.log.e("cc.w.slots.SlotsFreeLoopContorller","doFreeLoop params error");
+			cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED);
 			return;
 		}
 		this._isRunning = true;
 		cc.log("=====DO FreeLoop=====",leftTime);
-        //leftTime--;
         this.updateView();
-        //TEST
+        
         //播放动画并在结束后执行广播
-		cc.director.getScheduler().scheduleCallbackForTarget(this, function(){
-			this._isRunning = false;
-			cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED);
-		}, 2, 0, 0, false);
-		//END TEST
+        if(specialEffect.linePointIndexes.length>0){
+        	for(var i=0;i<specialEffect.linePointIndexes.length;i++){
+        		var cellIdx = specialEffect.linePointIndexes[i];
+        		var cellNode = cc.w.slots.SLOTS_CELL_NODES[cellIdx];
+        		cellNode.doCellAnimation(this._slotsNode._linesNode);
+        	}
+        }
+        //cc.director.getScheduler().scheduleCallbackForTarget(this, function(){
+        	this._isRunning = false;
+        	cc.w.slots.doFreeTimesAnimation(leftTime,this._parentNode,this._position.x,this._position.y,function(view){
+        		this._isRunning = false;
+        		cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED);
+        		if(specialEffect.linePointIndexes.length>0){
+        			for(var i=0;i<specialEffect.linePointIndexes.length;i++){
+        				var cellIdx = specialEffect.linePointIndexes[i];
+        				var cellNode = cc.w.slots.SLOTS_CELL_NODES[cellIdx];
+        				cellNode.reset();
+        			}
+        		}
+        	},this);
+        //}, 0.35, 0, 0, false);
+//        //TEST
+//        //播放动画并在结束后执行广播
+//		cc.director.getScheduler().scheduleCallbackForTarget(this, function(){
+//			this._isRunning = false;
+//			cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED);
+//		}, 2, 0, 0, false);
+//		//END TEST
 	},
     /**
      * 更新界面，在第一次得到免费次数时需要调用来显示得到的免费次数，
@@ -467,7 +529,7 @@ cc.w.slots.SlotsController = cc.Class.extend({
         if(result&&effectIndex<result.getSpecialEffects().length) {
             //cc.w.slots.SpecialEffect;
             var se = result.getSpecialEffects()[effectIndex];
-            if (se.type == cc.w.slots.SLOTS_SPECIAL_EFFECT_TYPE_FL) {
+            if (se.type == cc.w.slots.SLOTS_SPECIAL_EFFECT_TYPE_BL) {
                 if(this._slotsBloodIncreaseEffectController){
                     this._slotsBloodIncreaseEffectController.doEffect(se);
                 }
