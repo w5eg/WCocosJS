@@ -72,7 +72,20 @@ cc.w.slots.SlotsAutoLoopContorller = cc.Class.extend({
 	}
 });
 cc.w.slots.SlotsBigAnimationController = cc.Class.extend({
-    
+    _parentNode:null,
+    _position:null,
+    ctor:function(parentNode,position){
+        this._parentNode = parentNode;
+        this._position = position;
+    },
+    doEffect:function(score,callBackOnAniOver,target){
+        if(this._parentNode==null||this._position==null){
+            //callBackOnAniOver.call(this,target);
+            callBackOnAniOver();
+            return;
+        }
+        cc.w.slots.doBigAnimation(score,this._parentNode,this._position.x,this._position.y,callBackOnAniOver,target);
+    }
 });
 /**
  * 加血特效控制器,接收事件，发送事件
@@ -85,7 +98,7 @@ cc.w.slots.SlotsBloodIncreaseEffectController = cc.Class.extend({
     /**
      * @param parentNode
      * @param position
-     * @param {cc.w.slots.SlotsNode}slotsNode
+     * @param {cc.w.slots.SlotsNode}slotsNode 因为要做图标动画，所以传入这个参数
      */
 	init:function(parentNode,position,slotsNode){
         this._parentNode = parentNode;
@@ -113,20 +126,21 @@ cc.w.slots.SlotsBloodIncreaseEffectController = cc.Class.extend({
                 cellNode.doCellAnimation(this._slotsNode._linesNode);
             }
         }
-		//cc.director.getScheduler().scheduleCallbackForTarget(this, function(){
-		    this._isRunning = false;
-		    cc.w.slots.doBloodAddAnimation(specialEffect.getLevel(),this._parentNode,this._position.x,this._position.y,function(view){
-		    	this._isRunning = false;
-		    	cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_ON_BLOOD_INCREASE_FINISHED);
-		    	if(specialEffect.linePointIndexes.length>0){
-		    		for(var i=0;i<specialEffect.linePointIndexes.length;i++){
-		    			var cellIdx = specialEffect.linePointIndexes[i];
-		    			var cellNode = cc.w.slots.SLOTS_CELL_NODES[cellIdx];
-		    			cellNode.reset();
-		    		}
-		    	}
-		    },this);
-		//}, 0.35, 0, 0, false);
+        this._isRunning = false;
+        cc.w.slots.doBloodAddAnimation(specialEffect.getLevel(),this._parentNode,this._position.x,this._position.y,function(view){
+        	this._isRunning = false;
+        	if(specialEffect.linePointIndexes.length>0){
+        		for(var i=0;i<specialEffect.linePointIndexes.length;i++){
+        			var cellIdx = specialEffect.linePointIndexes[i];
+        			var cellNode = cc.w.slots.SLOTS_CELL_NODES[cellIdx];
+        			cellNode.reset();
+        		}
+        	}
+        	cc.director.getScheduler().scheduleCallbackForTarget(this, function(){
+        		cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_ON_BLOOD_INCREASE_FINISHED);
+        	}, 0.05, 0, 0, false);
+        },this);
+		
     }
 });
 /**
@@ -163,6 +177,11 @@ cc.w.slots.SlotsFreeLoopContorller = cc.Class.extend({
         this._maxFreeLoopLabel = maxFreeLoopLabel;
         this.updateView(0,0,minCost,maxCost);
 	},
+    /**
+     * @param parentNode
+     * @param position
+     * @param {cc.w.slots.SlotsNode}slotsNode 因为要做图标动画，所以传入这个参数
+     */
 	initAnimation:function(parentNode,position,slotsNode){
 		this._parentNode = parentNode;
 		this._position = position;
@@ -191,20 +210,20 @@ cc.w.slots.SlotsFreeLoopContorller = cc.Class.extend({
         		cellNode.doCellAnimation(this._slotsNode._linesNode);
         	}
         }
-        //cc.director.getScheduler().scheduleCallbackForTarget(this, function(){
+        this._isRunning = false;
+        cc.w.slots.doFreeTimesAnimation(leftTime,this._parentNode,this._position.x,this._position.y,function(view){
         	this._isRunning = false;
-        	cc.w.slots.doFreeTimesAnimation(leftTime,this._parentNode,this._position.x,this._position.y,function(view){
-        		this._isRunning = false;
-        		cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED);
-        		if(specialEffect.linePointIndexes.length>0){
-        			for(var i=0;i<specialEffect.linePointIndexes.length;i++){
-        				var cellIdx = specialEffect.linePointIndexes[i];
-        				var cellNode = cc.w.slots.SLOTS_CELL_NODES[cellIdx];
-        				cellNode.reset();
-        			}
+        	if(specialEffect.linePointIndexes.length>0){
+        		for(var i=0;i<specialEffect.linePointIndexes.length;i++){
+        			var cellIdx = specialEffect.linePointIndexes[i];
+        			var cellNode = cc.w.slots.SLOTS_CELL_NODES[cellIdx];
+        			cellNode.reset();
         		}
-        	},this);
-        //}, 0.35, 0, 0, false);
+        	}
+        	cc.director.getScheduler().scheduleCallbackForTarget(this, function(){
+        		cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED);
+        	}, 0.05, 0, 0, false);
+        },this);
 //        //TEST
 //        //播放动画并在结束后执行广播
 //		cc.director.getScheduler().scheduleCallbackForTarget(this, function(){
@@ -358,22 +377,28 @@ cc.w.slots.BetNodeController = cc.Class.extend({
 		if (index==-1) {
 			return false;
 		}
-		//if (index==this._multipleIndex) {//因为FLAX生成的组件的状态不问题。所以这里注释掉来保证逻辑正常
-		//	return false;
-		//}
+		if (index==this._multipleIndex) {//因为FLAX生成的组件的状态不问题。所以这里注释掉来保证逻辑正常,但现在又打开了，因为之前是通过按钮的selected属性来实现，现在通过修改帧来实现状态切换
+			return false;
+		}
 		this._multipleIndex = index;
 		for (var i = 0; i < this._multipleCBs.length; i++) {
 			var cb = this._multipleCBs[i];
 			if (cb == view) {
-				if(cb.setSelected){
-                    cb.setSelected(true);
-                    cb.enabled = false;
+                if(cb.gotoAndPlay){
+                    cb.gotoAndPlay("selected");
                 }
+                //if(cb.setSelected){
+                //    cb.setSelected(true);
+                //    cb.enabled = false;
+                //}
 			}else{
-				if(cb.setSelected){
-                    cb.setSelected(false);
-                    cb.enabled = true;
+                if(cb.gotoAndPlay){
+                    cb.gotoAndPlay("up");
                 }
+                //if(cb.setSelected){
+                //    cb.setSelected(false);
+                //    cb.enabled = true;
+                //}
 //				cb.runAction(cc.blink(2, 2));//TEST
 			}
 		}
@@ -391,6 +416,7 @@ cc.w.slots.SlotsController = cc.Class.extend({
 	_slotsFreeLoopController:null,
 	_slotsBloodIncreaseEffectController:null,
     _slotsStageController:null,
+    _slotsBigAnimationController:null,
 	_actions:[
 	          cc.w.slots.EVENT_START,
 	          cc.w.slots.EVENT_SHOW_LINE,
@@ -411,7 +437,10 @@ cc.w.slots.SlotsController = cc.Class.extend({
 	addSlotsStageController:function(slotsStageController){
 		this._slotsStageController = slotsStageController;
 	},
-	init:function(){
+    addSlotsBigAnimationController:function(slotsBigAnimationController){
+        this._slotsBigAnimationController = slotsBigAnimationController;
+    },
+	ctor:function(){
 		if (this.initialized) {
 			return;
 		}
@@ -421,8 +450,19 @@ cc.w.slots.SlotsController = cc.Class.extend({
 			ViewFacade.getInstance().addObserver(action, this);
 		}
 		
-		//增加停止事件转发
-		this.addCustomEventListener(cc.w.slots.EVENT_STOPPED,null);
+		//增加事件转发
+		var target = this;
+        this.addCustomEventListener(cc.w.slots.EVENT_SLOTS_STOPPED,function(){
+        	if(cc.w.slots.RESULT&&cc.w.slots.RESULT.stage == cc.w.slots.SLOTS_STAGE_NORMAL){
+        		if(target._slotsBigAnimationController){
+        			cc.log("=====EVENT_SLOTS_STOPPED=====");
+        			target._slotsBigAnimationController.doEffect(cc.w.slots.RESULT.score,function(){
+        				ViewFacade.getInstance().notifyObserver(
+        						new Notification(cc.w.slots.mappingAction(cc.w.slots.EVENT_STOPPED),cc.w.slots.RESULT));
+        			},target);
+        		}
+        	}
+        });
         this.addCustomEventListener(cc.w.slots.EVENT_BET_DONE,null);
         //增加完成事件转发,这三个事件，给中心时都转化为cc.w.slots.EVENT_ON_EFFECT_FINISHED
 		this.addCustomEventListener(cc.w.slots.EVENT_LINE_SHOWN,null);
@@ -432,7 +472,7 @@ cc.w.slots.SlotsController = cc.Class.extend({
 	addCustomEventListener:function(eventName,callback){
 		cc.eventManager.addCustomListener(eventName, function(event){ 
 			if (event!=null) {
-//				var target = event.getCurrentTarget();
+				var target = event.getCurrentTarget();
 				var data = event.getUserData();
                 if(eventName==cc.w.slots.EVENT_LINE_SHOWN
                     ||eventName==cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED
@@ -455,7 +495,7 @@ cc.w.slots.SlotsController = cc.Class.extend({
 			var action = this._actions[i];
 			ViewFacade.getInstance().removeObserver(action, this);
 		}
-		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_STOPPED);
+		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_SLOTS_STOPPED);
 		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_BET_DONE);
 		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_LINE_SHOWN);
 		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED);
@@ -486,9 +526,11 @@ cc.w.slots.SlotsController = cc.Class.extend({
             if(data){
                 cc.w.slots.RESULT = data;
                 cc.log("=====EVENT_RESULT====="+data);
+
                 if (cc.w.slots.RESULT.stage == cc.w.slots.SLOTS_STAGE_BOSS&&this._betNodeController!=null) {
                     this._betNodeController.onResult(data.getBetData());
                 }
+
                 if(cc.w.slots.RESULT.isFreeLoopMode()&&cc.w.slots.RESULT.getFreeLoopTime()>0){
                     if(this._slotsFreeLoopController)
                         this._slotsFreeLoopController.updateView(cc.w.slots.RESULT.getFreeLoopTime());

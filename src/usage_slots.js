@@ -202,7 +202,6 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 
         //实例化对象，并调用init()方法
 		this._slotsController = new cc.w.slots.SlotsController();
-		this._slotsController.init();
 
         //添加免费次数控制器
         var freeLoopController  = new cc.w.slots.SlotsFreeLoopContorller();
@@ -220,6 +219,9 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
         freeLoopController.init(100,5000,minLoopCostLabel,minFreeLoopLabel,maxLoopBtn,maxLoopCostLabel,maxFreeLoopLabel);
         freeLoopController.initAnimation(this,cc.p(this.getContentSize().width/2,this.getContentSize().height/2),this._slotsNode);
         this._slotsController.addSlotsFreeLoopController(freeLoopController);
+        //添加大动画特效控制器
+        var bigAniController = new cc.w.slots.SlotsBigAnimationController(this,cc.p(this.getContentSize().width/2,this.getContentSize().height/2));
+        this._slotsController.addSlotsBigAnimationController(bigAniController);
         //添加加血特效控制器
         var bloodIncreaseEffectController = new cc.w.slots.SlotsBloodIncreaseEffectController();
         bloodIncreaseEffectController.init(this,cc.p(this.getContentSize().width/2,this.getContentSize().height/2),this._slotsNode);
@@ -355,7 +357,7 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
             var betMultiples = "1,2,5";//BOSS阶段的押注倍数
 
 
-            var stage = 1;//0,1,当前阶段，0为普通阶段，1为BOSS阶段
+            var stage = 0;//0,1,当前阶段，0为普通阶段，1为BOSS阶段
             var freeLoopTime = 0;//剩余免费次数
             var isFreeLoopMode = false;//是否是免费次数模式
             var isAutoLoopMode = false;//是否是自动执行模式
@@ -369,8 +371,8 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
                 [
                     "0,1,2,3,4:2:11",
                     "5,6,7,8,9:3:31",
-                    "10,11,12,13,14:5:100",
-                    "0,1,7,13,14:2:21",
+                    "10,11,12,13,14:4:100",
+                    "0,1,7,13,14:5:21",
                     "5,11,7,13,9:4:41"
                 ];
             var specialEffectsData =//特效数据，用“:”分隔为两部分，前部分为位置索引，从0-14;后部分为星级数据，1表示免费次数，2表示加血
@@ -381,6 +383,7 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 
             var result = new cc.w.slots.Result();
             result.stage = stage;
+			result.score = 100;
             result.setLoopData(minLoopCost,maxLoopCost);
             result.setImagesData(imagesData);
             result.setLinesData(linesData);

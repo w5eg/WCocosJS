@@ -54,7 +54,8 @@ cc.w.slots.EVENT_DO_SPECIAL_EFFECT = "cc.w.slots.EVENT_DO_SPECIAL_EFFECT";//老�
 cc.w.slots.EVENT_RESET = "cc.w.slots.EVENT_GAME_RESET";//老虎机重置事件，主要就是把老虎机切换回第一阶段,数据无
 //发出的事件
 cc.w.slots.EVENT_CYCLED = "cc.w.slots.EVENT_CYCLED";//老虎机运行一个循环事件
-cc.w.slots.EVENT_STOPPED = "cc.w.slots.EVENT_STOPPED";//老虎机停止事件(所有列都停止后调用)
+cc.w.slots.EVENT_STOPPED = "cc.w.slots.EVENT_STOPPED";//老虎机停止事件(所有列都停止后调用)给外部使用
+cc.w.slots.EVENT_SLOTS_STOPPED = "cc.w.slots.EVENT_SLOTS_STOPPED";//老虎机停止事件(所有列都停止后调用)内部使用
 cc.w.slots.EVENT_LINE_SHOWN = "cc.w.slots.EVENT_LINE_SHOWN";//老虎机画一条线并播放线动画结束事件，数据：线分数
 cc.w.slots.EVENT_ON_EFFECT_FINISHED = "cc.w.slots.EVENT_ON_EFFECT_FINISHED";//老虎机一次效果执行结束，发给中心用，有三个事件：画线结束，免费次数动画结束，加血动画结束，数据无
 cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED = "cc.w.slots.EVENT_ON_FREE_LOOP_FINISHED";//老虎机免费次数执行一次结束，数据无
@@ -128,9 +129,10 @@ cc.w.slots.getLineAnimationLevel = function(score){
 		level = 5;
 	return level;
 };
-cc.w.slots.doLineAnimation = function(score,parentNode,x,y,callBackOnAniOver,target){
+cc.w.slots.doBigAnimation = function(score,parentNode,x,y,callBackOnAniOver,target){
     var level = cc.w.slots.getLineAnimationLevel(score);
     if(level<=0){
+        callBackOnAniOver();
     	return;
     }
     var aniName = "lineBigAni"+level;
@@ -333,6 +335,7 @@ cc.w.slots.BetData = cc.Class.extend({
 cc.w.slots.Result = cc.Class.extend({
 	_minLoopCost:0,//普通攻击花费
 	_maxLoopCost:0,//强攻花费
+	score:0,//总分数
 	stage:0,//阶段,0表示老虎机阶段（普通阶段）1表示押注阶段（BOSS阶段）
 	isAutoLoopMode:false,//是否是自动执行模式
     loopLines:0,//老虎机执行模式，相当于压多少条线，目前只有最少和最多两种，最少为1条，最多（目前）为25条
@@ -574,18 +577,15 @@ cc.w.slots.LinesNode = cc.Node.extend({//TODO
 		
 		var action1 = cc.blink(1, 3);
 		var callback = cc.callFunc(this.onLineShown, this);
-		var seq = cc.sequence(callback,action1);
+		var seq = cc.sequence(action1,callback);
 		this._drawNode.runAction(seq);
 //		var action = cc.fadeOut(0.5);
 //		this._drawNode.runAction(cc.repeat(cc.sequence(action,action.reverse()),-1));
 	},
 	onLineShown:function(){
-        var line = cc.w.slots.RESULT.getLines()[this._currentLineIndex];
-        cc.w.slots.doLineAnimation(line.score,this,this.getContentSize().width/2,this.getContentSize().height/2,function(view){
-            this._drawNode.setVisible(false);
-            cc.w.slots.stopAllCellAnimations();
-            cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_LINE_SHOWN,this._currentLineIndex);
-        },this);
+		this._drawNode.setVisible(false);
+		cc.w.slots.stopAllCellAnimations();
+		cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_LINE_SHOWN,this._currentLineIndex);
 	},
 	createRectStencil:function(size,height){
 		var stencil = new cc.DrawNode();
@@ -886,8 +886,8 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 	resetCells:function(){
 		if(this._commonGroups!=null)this._commonGroups[1].reset();
 	},
-	onSlotsStopped:function(){//TODO:
-		cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_STOPPED);
+	onSlotsStopped:function(){
+		cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_SLOTS_STOPPED);
 	},
 	start:function(){
 		//如果当前是运行状态并且有结果数据则的停止运行
@@ -1036,7 +1036,7 @@ cc.w.view.SlotsNode = cc.Node.extend({//TODO change cc.w.view to cc.w.slots
 
 		var event_stopped = cc.EventListener.create({
 			event: cc.EventListener.CUSTOM,
-			eventName: cc.w.slots.EVENT_STOPPED,
+			eventName: cc.w.slots.EVENT_SLOTS_STOPPED,
 			callback: function(event){
 				if (event!=null) {
 					var target = event.getCurrentTarget();
@@ -1123,7 +1123,7 @@ cc.w.view.SlotsNode = cc.Node.extend({//TODO change cc.w.view to cc.w.slots
 	onExit:function(){
 		this._super();
 		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_START);
-		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_STOPPED);
+		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_SLOTS_STOPPED);
 		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_SHOW_LINE);
 	}
 });

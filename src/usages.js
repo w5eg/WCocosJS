@@ -69,6 +69,7 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
     onExit:function(){
     	this._super();
     	this._webSocket.close();
+        cc.log(new Date()-this._testStartTime);
     },
     onEnter: function () {
         this._super();
@@ -115,7 +116,9 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
 //        retryTimer.stop();
 
     },
+    _testStartTime:null,
     setupView: function () {
+        this._testStartTime = new Date();
         this._nodeGrid = new cc.NodeGrid();
 //		this._nodeGrid.setContentSize(100,this.getContentSize().height);
 //		this._nodeGrid.setAnchorPoint(cc.p(0.5, 0.5));
@@ -147,7 +150,7 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
         menu.alignItemsVertically();
         this.addChild(menu);
         
-        //cc.w.slots.doLineAnimation(51,this,this.getContentSize().width/2,this.getContentSize().height/2);
+        //cc.w.slots.doBigAnimation(51,this,this.getContentSize().width/2,this.getContentSize().height/2);
         //cc.w.slots.doBloodAddAnimation(1,this,this.getContentSize().width/2,this.getContentSize().height/2);
         cc.w.slots.doFreeTimesAnimation(1, this, this.getContentSize().width / 2, this.getContentSize().height / 2, function (view) {
             cc.log(view);
