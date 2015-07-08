@@ -48,12 +48,12 @@
  */
 
 cc.game.onStart = function(){
-	if (cc.sys.isNative === true) {
-		require('pomelo-cocos2d-js/index.js');
-	}
+//	if (cc.sys.isNative === true) {
+//		require('pomelo-cocos2d-js/index.js');
+//	}
 	
     cc.view.adjustViewPort(true);
-    cc.view.setDesignResolutionSize(720, 1280, cc.ResolutionPolicy.SHOW_ALL);
+    cc.view.setDesignResolutionSize(320, 480, cc.ResolutionPolicy.SHOW_ALL);
     cc.view.resizeWithBrowserSize(true);
     
     flax.init(cc.ResolutionPolicy.SHOW_ALL);

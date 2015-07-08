@@ -73,6 +73,9 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
     onEnter: function () {
         this._super();
         this.testWebSocket();
+
+        new TestClass("abc").doSth();
+
 //		this._nodeGrid.runAction(cc.flipX3D(5));
 //		this._nodeGrid.runAction(cc.flipY3D(5));
 //		this._nodeGrid.runAction(cc.pageTurn3D(3.0, cc.size(15, 10)));
@@ -185,7 +188,7 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
                 cc.log("=====[onClose]=====");
             }
         });
-        var ws = cc.w.net.WebSocket.create(listener, "ws://192.168.1.199:3000");
+        var ws = new cc.w.net.WebSocket(listener, "ws://192.168.1.199:3000");
         ws.enableReconnection(this, 5, 3);
         ws.connect();
         this._webSocket = ws;
@@ -198,7 +201,7 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
     	
     	
     	var preLen = 8;
-    	var dataStr  = "ab中";
+    	var dataStr  = '{"roomID":1}';
     	var charArr = utf8.toByteArray(dataStr);
     	var dataLen = charArr.length;
         cc.log("dataLen:"+dataLen);
@@ -225,4 +228,16 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
 //    	var blob = new Blob(["abc"]);
 //    	ws.send(blob);
     }
+});
+var TestClass = cc.Class.extend({
+	_param:null,
+    ctor:function(param){
+    	this._param = param;
+    },
+    doSth:function(){
+    	cc.log("ttttttttttttttttttttttttttttttttttt"+this._param);
+    }
+//    init:function(){
+//        return true;
+//    }
 });

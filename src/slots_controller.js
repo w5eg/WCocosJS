@@ -71,6 +71,9 @@ cc.w.slots.SlotsAutoLoopContorller = cc.Class.extend({
 	updateView:function(){
 	}
 });
+cc.w.slots.SlotsBigAnimationController = cc.Class.extend({
+    
+});
 /**
  * 加血特效控制器,接收事件，发送事件
  */

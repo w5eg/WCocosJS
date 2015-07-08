@@ -66,7 +66,7 @@ cc.w.net.WebSocket = cc.Class.extend({
      //* @param {int} proxyPort
      //* @param {string} headers
      */
-    init:function(l,url, protocols
+    ctor:function(l,url, protocols
         //, proxyHost, proxyPort, headers
     ){
         this._l = l;
