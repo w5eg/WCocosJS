@@ -358,6 +358,7 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 
 
             var stage = 0;//0,1,当前阶段，0为普通阶段，1为BOSS阶段
+			var score = 100;//本次老虎机的最终总分数
             var freeLoopTime = 0;//剩余免费次数
             var isFreeLoopMode = false;//是否是免费次数模式
             var isAutoLoopMode = false;//是否是自动执行模式
@@ -381,9 +382,10 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
                     "5,11,7,13,9:2"
                 ];
 
+
             var result = new cc.w.slots.Result();
             result.stage = stage;
-			result.score = 100;
+			result.score = score;
             result.setLoopData(minLoopCost,maxLoopCost);
             result.setImagesData(imagesData);
             result.setLinesData(linesData);
