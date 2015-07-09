@@ -181,7 +181,17 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
                 self.sendData(webSocket);
             },
             onMessage: function (webSocket, data) {
-                cc.log("=====[onMessage]=====" + data);
+            	cc.log("=====[onMessage]=====" + data);
+            	if((data instanceof ArrayBuffer)&&data.byteLength>8){
+                	var preData = new Uint32Array(data.slice(0,8));
+                	var len = preData[1];
+                	var msgId = preData[0];
+                	var content = new TextDecoder('utf-8').decode(data.slice(8,len));
+                	cc.log("=====[onMessage]=====" +msgId);
+                	cc.log("=====[onMessage]=====" +len);
+                	cc.log("=====[onMessage]=====" +content);
+                	cc.log("=====[onMessage]=====" +JSON.parse(content)[0].RoomName);
+                }
 //				webSocket.close();
             },
             onError: function (webSocket) {
@@ -211,7 +221,7 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
         var buffer = new ArrayBuffer(preLen+dataLen);
         cc.log("bufferLen:"+buffer.byteLength);
     	var u32a = new Uint32Array(buffer,0,2);
-    	u32a[0] = 1001;
+    	u32a[0] = 1003;
     	u32a[1] = buffer.byteLength;
     	var dv = new DataView(buffer);
         for(var i= 0;i<charArr.length;i++){
@@ -219,8 +229,7 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
             cc.log("offset:"+(preLen+i)+"char="+charArr[i]);
         }
     	ws.send(buffer);
-    	
-//    	var buffer = new ArrayBuffer(8);
+    	cc.log("on send:"+new TextDecoder('utf-8').decode(buffer.slice(8)));
 //    	var x = new DataView(buffer);
 ////    	x.setUint32(0, 32);
 ////    	x.setUint32(4, 1002);
