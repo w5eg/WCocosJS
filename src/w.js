@@ -738,19 +738,32 @@ cc.w.view.UsageBaseLayer = cc.Layer.extend({
 	},
 });
 cc.w.view.addLongPressListener = function(target){//TODO:
-	var startTime = 0+999;
+	var startTime = 0;
+    var isBroken = false;
+    var beginLocation = null;
+    var isLongPressBroken = function(currentLoc){
+        if(currentLoc&&beginLocation){
+            var distance = cc.pDistance(currentLoc,beginLocation);
+            cc.log("[addLongPressListener] :distance:"+distance);
+            if(distance>20){
+                return true;
+            }
+        }
+        return false;
+    };
 	var l = cc.EventListener.create({
 		event: cc.EventListener.TOUCH_ONE_BY_ONE,
 		swallowTouches: true,                       // 设置是否吞没事件，在 onTouchBegan 方法返回 true 时吞掉事件，不再向下传递。
 		onTouchBegan: function (touch, event) {     //实现 onTouchBegan 事件处理回调函数
 			var target = event.getCurrentTarget();  // 获取事件所绑定的 target, 通常是cc.Node及其子类
+            beginLocation = touch.getLocation();
 			// 获取当前触摸点相对于按钮所在的坐标
-			var locationInNode = target.convertToNodeSpace(touch.getLocation());
+			var locationInNode = target.convertToNodeSpace(beginLocation);
 			var s = target.getContentSize();
 			var rect = cc.rect(0, 0, s.width, s.height);
-			cc.log("wwwwwwwwww:"+startTime);
 			if (cc.rectContainsPoint(rect, locationInNode)) {       // 判断触摸点是否在按钮范围内
-				cc.log("sprite began... x = " + locationInNode.x + ", y = " + locationInNode.y);
+				startTime = new Date();
+				cc.log("[addLongPressListener] startTime:"+startTime,beginLocation.x,beginLocation.y);
 				return true;
 			}
 			return false;
@@ -758,15 +771,21 @@ cc.w.view.addLongPressListener = function(target){//TODO:
 		onTouchMoved: function (touch, event) {         //实现onTouchMoved事件处理回调函数, 触摸移动时触发
 			// 移动当前按钮精灵的坐标位置
 			var target = event.getCurrentTarget();
-			var delta = touch.getDelta();              //获取事件数据: delta
-			target.x += delta.x;
-			target.y += delta.y;
+            //var delta = touch.getDelta();              //获取事件数据: delta
+            //cc.log("delta:"+delta.x,delta.y);
+            var moveLocation = touch.getLocation();
+            cc.log("[addLongPressListener] moveLocation:"+moveLocation);
+            //if(delta>20){
+            //    isBroken = true;
+            //}
 		},
 		onTouchEnded: function (touch, event) {         // 实现onTouchEnded事件处理回调函数
 			var target = event.getCurrentTarget();
-			cc.log("sprite onTouchesEnded.. ");
-			target.setOpacity(255);
-			target.setLocalZOrder(0);
+            var endLocation = touch.getLocation();
+            cc.log("[addLongPressListener] onTouchesEnded:"+isBroken,endLocation.x,endLocation.y);
+            if(!isBroken){
+
+            }
 		}
 	});
 	cc.eventManager.addListener(l,target);

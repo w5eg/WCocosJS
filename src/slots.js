@@ -1,23 +1,23 @@
 cc.w.slots = {};
 //老虎机属性
 cc.w.slots.COLUMN_COUNT = 5;//一共多少列
-cc.w.slots.ROW_COUNT = 3;//一共多少行
+cc.w.slots.ROW_COUNT = 3;//一共多少行,目前只支持三行
 cc.w.slots.CELL_KIND_COUNT = 12;//图标种类数量
 cc.w.slots.CYCLE_COUNT_MIN = 2;//最少要完成循滚动的次数,要求为偶数
 cc.w.slots.CELL_IMAGES = [//图标所有种类的图片，目前有13种
-                          "res/icon_1.png",
-                          "res/icon_2.png",
-                          "res/icon_3.png",
-                          "res/icon_4.png",
-                          "res/icon_5.png",
-                          "res/icon_6.png",
-                          "res/icon_7.png",
-                          "res/icon_8.png",
-                          "res/icon_9.png",
-//                          "res/icon_10.png",
-                          "res/icon_a1.png",
-                          "res/icon_a2.png",
-                          "res/icon_a3.png"
+                          "Icon_1",
+                          "Icon_2",
+                          "Icon_3",
+                          "Icon_4",
+                          "Icon_5",
+                          "Icon_6",
+                          "Icon_7",
+                          "Icon_8",
+                          "Icon_9",
+//                          "Icon_10",
+                          "Icon_a1",
+                          "Icon_a2",
+                          "Icon_a3"
                           ];
 //全局变量
 cc.w.slots.SLOTS_CELL_NODES = [];//存放所有SlotsCellNode
@@ -528,7 +528,7 @@ cc.w.slots.LinesNode = cc.Node.extend({//TODO
 		for (var i = 0; i < totalCount; i++) {
 			var linePoint = cc.w.slots.LINE_POINTS[i];
 			var col = i%cc.w.slots.COLUMN_COUNT;
-			var row = Math.floor(i/5);
+			var row = Math.floor(i/cc.w.slots.COLUMN_COUNT);
 			var x = col*this._cellRectWidth;
 			var y = height-row*this._cellRectHeight;
 			var rect = cc.rect(x, y, this._cellRectWidth, this._cellRectHeight);
@@ -620,18 +620,18 @@ cc.w.view.SlotsCellNode = cc.Node.extend({
 		this.setupView(size, height);
 	},
 	setupView:function(size, height){
-		this._clippingNode = new cc.ClippingNode(this.createRectStencil(size, height));
-		this._clippingNode.setInverted(false);
-		this.addChild(this._clippingNode);
+		//this._clippingNode = new cc.ClippingNode(this.createRectStencil(size, height));
+		//this._clippingNode.setInverted(false);
+		//this.addChild(this._clippingNode);
 		
 		this._imageSprite = new cc.MenuItemSprite();
 		this._imageSprite.setAnchorPoint(0, 0);
 		this._imageSprite.setContentSize(this.getContentSize());
-		this._clippingNode.addChild(this._imageSprite);
+		this.addChild(this._imageSprite);
 		this.setImage(cc.w.slots.getRandomImageId());
 	},
 	setImage:function(path){
-		var sp = new cc.Sprite(path);
+		var sp = flax.assetsManager.createDisplay(slotIconRes.slotIcon, path)//new cc.Sprite(path);
 		if (this.getContentSize().width<sp.getContentSize().width) {
 			var scaleValue = this.getContentSize().width/sp.getContentSize().width;
 			sp.setScale(scaleValue, scaleValue);
@@ -833,7 +833,6 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 //				group.setLeader(false);
 				this._commonGroups.push(group);
 			}
-			
 //			group.setOpacity(5);
 			group.setPosition(0, this.getContentSize().height*2-i*groupHeight);
 			this.addClippedChild(group);

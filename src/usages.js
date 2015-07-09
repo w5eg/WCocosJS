@@ -50,7 +50,8 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
     _bgImage: null,
     ctor: function () {
         this._super();
-        var layer = new cc.LayerColor(cc.color(cc.random0To1() * 205, cc.random0To1() * 205, cc.random0To1() * 205, 255));
+//        var layer = new cc.LayerColor(cc.color(cc.random0To1() * 205, cc.random0To1() * 205, cc.random0To1() * 205, 255));
+        var layer = new cc.LayerColor(cc.color("#ff0000"));
         this.addChild(layer);
         this.setupView();
         var keyboardListener = cc.EventListener.create({

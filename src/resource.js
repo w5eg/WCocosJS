@@ -30,7 +30,13 @@ var res =
    "res/btn_pink.png",
    "res/btn_bf.png",
 ];
+var slotIconRes = {
+   slotIcon : "res/slotIcon.plist",
+   slotIcon_png : "res/slotIcon.png"
+};
 var g_resources = [];
 for (var i in res) {
    g_resources.push(res[i]);
 }
+g_resources.push(slotIconRes.slotIcon);
+g_resources.push(slotIconRes.slotIcon_png);
