@@ -26,6 +26,7 @@ cc.w.slots.LINE_POINTS = null;//存放所有画线的点。在初始化老虎机
 //老虎机执行模式，相当于压多少条线，目前只有最少和最多两种，最少为1条，最多（目前）为25条
 cc.w.slots.SLOTS_LOOP_LINES_MIN = 1;//普通模式，花最少的钱
 cc.w.slots.SLOTS_LOOP_LINES_MAX = -1;//加强模式，花最多的钱
+cc.w.slots.SlotsLoopLines = cc.w.slots.SLOTS_LOOP_LINES_MIN;
 /**
  * 老虎机阶段，分别为正常阶段和BOSS阶段，默认为普通阶段
  */
@@ -129,15 +130,52 @@ cc.w.slots.getLineAnimationLevel = function(score){
 		level = 5;
 	return level;
 };
-cc.w.slots.doBigAnimation = function(score,parentNode,x,y,callBackOnAniOver,target){
-    var level = cc.w.slots.getLineAnimationLevel(score);
-    if(level<=0){
-        callBackOnAniOver();
-    	return;
+cc.w.slots.getLineColor = function(lineId){
+    var colorId = lineId%10;
+    var color = null;
+    switch (colorId){
+        case 1:
+            color = cc.color(255,0,0);
+            break;
+        case 2:
+            color = cc.color(255,255,0);
+            break;
+        case 3:
+            color = cc.color(0,0,255);
+            break;
+        case 4:
+            color = cc.color(255,0,255);
+            break;
+        case 5:
+            color = cc.color(255,125,0);
+            break;
+        case 6:
+            color = cc.color(0,255,255);
+            break;
+        case 7:
+            color = cc.color(133,58,26);
+            break;
+        case 8:
+            color = cc.color(0,255,0);
+            break;
+        case 9:
+            color = cc.color(125,0,255);
+            break;
+        default :
+            color = cc.color(255,0,0);
+            break;
     }
-    var aniName = "lineBigAni"+level;
+    return color;
+};
+cc.w.slots.doBigAniGold = function(score,parentNode,x,y,callBackOnAniOver,target){
+    var level = cc.w.slots.getLineAnimationLevel(score);
+    if(level<=1){
+        if(callBackOnAniOver)callBackOnAniOver();
+    	return null;
+    }
+    var aniName = "bigAniGold"+level;
     cc.log("PLAY BIG ANI:"+aniName);
-    var ani = flax.assetsManager.createDisplay("res/anis.plist", "lineBigAnis", {
+    var ani = flax.assetsManager.createDisplay("res/anis.plist", aniName, {
 		parent: parentNode,
 		x: x,
 		y: y
@@ -146,11 +184,32 @@ cc.w.slots.doBigAnimation = function(score,parentNode,x,y,callBackOnAniOver,targ
     if(callBackOnAniOver&&target){
         ani.onAnimationOver.add(callBackOnAniOver, target);
     }
-    ani.gotoAndPlay(aniName);
+    ani.play();
     return ani;
+};
+cc.w.slots.doBigAnimation = function(score,parentNode,x,y,callBackOnAniOver,target){
+	var level = cc.w.slots.getLineAnimationLevel(score);
+	if(level<=0){
+        if(callBackOnAniOver)callBackOnAniOver();
+		return;
+	}
+	var aniName = "lineBigAni"+level;
+	cc.log("PLAY BIG ANI:"+aniName);
+	var ani = flax.assetsManager.createDisplay("res/anis.plist", "lineBigAnis", {
+		parent: parentNode,
+		x: x,
+		y: y
+	});
+	ani.autoDestroyWhenOver = true;
+	if(callBackOnAniOver&&target){
+		ani.onAnimationOver.add(callBackOnAniOver, target);
+	}
+	ani.gotoAndPlay(aniName);
+	return ani;
 };
 cc.w.slots.doBloodAddAnimation = function(level,parentNode,x,y,callBackOnAniOver,target){
     if(level<=0){
+        if(callBackOnAniOver)callBackOnAniOver();
     	return;
     }
     var aniName = "bloodAddAni"+level;
@@ -168,7 +227,11 @@ cc.w.slots.doBloodAddAnimation = function(level,parentNode,x,y,callBackOnAniOver
     return ani;
 };
 cc.w.slots.doFreeTimesAnimation = function(times,parentNode,x,y,callBackOnAniOver,target){
-    var ani = flax.assetsManager.createDisplay("res/anis.plist", "freeTimesAni", {
+    var aniName = "aniFreeLoopMin";
+    if(cc.w.slots.SlotsLoopLines == cc.w.slots.SLOTS_LOOP_LINES_MAX){
+        aniName = "aniFreeLoopMax";
+    }
+    var ani = flax.assetsManager.createDisplay("res/anis.plist", aniName, {
 		parent: parentNode,
 		x: x,
 		y: y
@@ -195,6 +258,7 @@ cc.w.slots.computeCellNodeIndex = function(colIndex,groupCellIndex){
  * 线对象
  */
 cc.w.slots.Line = cc.Class.extend({
+    lineId:0,//线ID
 	len:2,//连了几个，最少两个
     score:0,
 	_linePints:null,//组成线的所有点
@@ -283,14 +347,24 @@ cc.w.slots.LinePoint = cc.Class.extend({
 	/**
 	 * 根据当前传入的线和矩形来计算点的坐标
 	 */
-	computePointOfLine:function(line){
+	computePointOfLine:function(line,hasOffset){
 		if (this._lines==null||this._lines.length==0||this._rect==null) {
 			cc.w.log.e("cc.w.slots.LinePoint", "this._lines==null||this.rect==null");
 			return [cc.p(0, 0)];
 		}
 		var posX = this._rect.x + this._rect.width/2;
 		var posY = this._rect.y - this._rect.height/2;
-		
+
+        //if(hasOffset){
+        //    var linesCount = this._lines.length;
+        //    var index = this._lines.indexOf(line);
+        //
+        //    if (index!=-1) {
+        //        var top = this._rect.y;//+this._rect.height;
+        //        posY = top - (index)*( this._rect.height/(linesCount+1) );
+        //    }
+        //}
+
 		var points = new Array();
 		var centerPoint = cc.p(posX,posY);
 		
@@ -306,18 +380,9 @@ cc.w.slots.LinePoint = cc.Class.extend({
 			posX = this._rect.x + this._rect.width;
 			points.push(cc.p(posX, posY));
 		}
-		
-//		var linesCount = this._lines.length;
-//		var index = this._lines.indexOf(line);
-//		
-//		if (index!=-1) {
-//			var top = this._rect.y;//+this._rect.height;
-//			poxY = top - (index)*( this._rect.height/(linesCount+1) );
-//		}
-		
-		
+
 		return points;
-	},
+	}
 });
 /**
  * 押注数据
@@ -412,13 +477,15 @@ cc.w.slots.Result = cc.Class.extend({
 		for (var lineIndex = 0; lineIndex < data.length; lineIndex++) {
 			var lineData = data[lineIndex];
 			var lineDataArray = lineData.split(":");
-			if (lineDataArray.length>=3) {
+			if (lineDataArray.length>=4) {
 				var line = new cc.w.slots.Line();
 				var linePointIndexes = lineDataArray[0].split(",");
-				var lineLen = lineDataArray[1];
-                var score = lineDataArray[2];
+				var lineLen = new Number(lineDataArray[1]);
+                var score = new Number(lineDataArray[2]);
+                var lineId = new Number(lineDataArray[3]);
 				line.len = lineLen;
                 line.score = score;
+                line.lineId = lineId;
 				var prePoint = null;
 				for (var i = 0; i < linePointIndexes.length; i++) {
 					var idx = linePointIndexes[i];
@@ -472,7 +539,7 @@ cc.w.slots.stopAllCellAnimations = function(){
     for(var i=0; i<cc.w.slots.SLOTS_CELL_NODES.length;i++){
         cc.w.slots.SLOTS_CELL_NODES[i].reset();
     }
-},
+};
 /////////////////////////////////////////////////////////////////////////////////////
 //cc.w.view.LineCellNode = cc.Node.extend({
 //});
@@ -541,6 +608,89 @@ cc.w.slots.LinesNode = cc.Node.extend({//TODO
 	reset:function(){
 		this._drawNode.clear();
 	},
+    drawSingleLine:function(line,hasOffset){
+        if (line==null||line.getPoints()==null||line.getPoints().length==0) {
+            return false;
+        }
+        var lineSize = 15;
+        var positions = new Array();
+        var lineColor = cc.w.slots.getLineColor(line.lineId);
+        //转化linePoint to cc.p()数组，并画线
+        for (var i = 0; i < line.getPoints().length; i++) {
+            var point = line.getPoints()[i];
+            var pos =
+//				cc.p(point.getRect().x,point.getRect().y);
+                point.computePointOfLine(line,hasOffset);
+            for (var posIndex = 0; posIndex < pos.length; posIndex++) {
+                positions.push(pos[posIndex]);
+            }
+            //TEST
+//			this._drawNode.drawDot(pos, 5, cc.color(0, 0, 255, 128));
+            //END TEST
+        }
+        var lineCount = 5;
+        var midIndex = 2;
+        lineSize/=lineCount;
+        for(var i=0;i<lineCount;i++){
+            if(i==midIndex){
+                this._drawNode.drawCardinalSpline(positions, 1, 100, lineSize, lineColor);
+                continue;
+            }
+            var newPositions;
+            var mOffset = Math.abs(midIndex-i)-1;
+            //cc.log("wwwwwwwwwwwwwwww"+mOffset);
+            //if(mOffset>0){
+            //    var offset = cc.p(0,(midIndex-i)*lineSize-lineSize/2*mOffset);
+            //    newPositions = cc.w.util.makeOffsetPositions(positions,offset);
+                //this._drawNode.drawCardinalSpline(newPositions, 1, 100, lineSize, lineColor);
+            //}else{
+
+            //}
+
+            if(i<midIndex){
+                var offset = cc.p(0,((lineSize-1)*mOffset)+lineSize/2);
+                newPositions = cc.w.util.makeOffsetPositions(positions,offset);
+                var colorOffset = -(mOffset+1)*50;
+                var color = cc.color(
+                    this._getNewColorValue(lineColor.r,colorOffset),
+                    this._getNewColorValue(lineColor.g,colorOffset),
+                    this._getNewColorValue(lineColor.b,colorOffset)
+                );
+                this._drawNode.drawCardinalSpline(newPositions, 1, 100, lineSize, color);
+            }else{
+                var offset = cc.p(0,(-(lineSize-1)*mOffset)-lineSize/2);
+                newPositions = cc.w.util.makeOffsetPositions(positions,offset);
+                var colorOffset = (mOffset+1)*50;
+                var color = cc.color(
+                    this._getNewColorValue(lineColor.r,colorOffset),
+                    this._getNewColorValue(lineColor.g,colorOffset),
+                    this._getNewColorValue(lineColor.b,colorOffset)
+                );
+                this._drawNode.drawCardinalSpline(newPositions, 1, 100, lineSize, color);
+            }
+        }
+        return true;
+    },
+    _getNewColorValue:function(oColorValue,offsetValue){
+        //var mOffsetValue = Math.abs(offsetValue);
+        var newColorValue = oColorValue+offsetValue;
+        //if(offsetValue<0){
+        //    newColorValue = oColorValue-oColorValue*mOffsetValue;
+        //}
+        newColorValue = newColorValue<0?0:newColorValue;
+        newColorValue = newColorValue>255?255:newColorValue;
+        return newColorValue;
+    },
+    drawAllLines:function(){
+        if (cc.w.slots.RESULT==null||cc.w.slots.RESULT.getLines()==null) {
+            return;
+        }
+        this._drawNode.clear();
+        for(var i=0;i<cc.w.slots.RESULT.getLines().length;i++){
+            var line = cc.w.slots.RESULT.getLines()[i];
+            this.drawSingleLine(line,true);
+        }
+    },
 	_currentLineIndex:-1,
 	drawLine:function(lineIndex){
 		this._drawNode.clear();
@@ -549,11 +699,10 @@ cc.w.slots.LinesNode = cc.Node.extend({//TODO
 			return;
 		}
 		var line = cc.w.slots.RESULT.getLines()[lineIndex];
-		if (line.getPoints()==null||line.getPoints().length==0) {
+		if (!this.drawSingleLine(line)) {
 			return;
 		}
-		var positions = new Array();
-		var lineSize = 8;
+
         cc.w.slots.stopAllCellAnimations();
 		for (var i = 0; i < line.getPoints().length; i++) {
 			var point = line.getPoints()[i];
@@ -561,21 +710,10 @@ cc.w.slots.LinesNode = cc.Node.extend({//TODO
                 var cellNode = cc.w.slots.SLOTS_CELL_NODES[point.index];
                 cellNode.doCellAnimation(this);
             }
-			//TEST
-			var pos = 
-//				cc.p(point.getRect().x,point.getRect().y);
-				point.computePointOfLine(line);
-			for (var posIndex = 0; posIndex < pos.length; posIndex++) {
-				positions.push(pos[posIndex]);
-			}
-//			this._drawNode.drawDot(pos, 5, cc.color(0, 0, 255, 128));
-			//END TEST
-			//TODO 转化linePoint to cc.p()数组，并画线
 		}
-		this._drawNode.drawCardinalSpline(positions, 1, 100, lineSize, cc.color(255, 0, 255, 255));
-//		this._drawNode.drawCardinalSpline(positions, 1, 100, lineSize*0.5, cc.color(255, 0, 255, 255*0.7));
-		
-		var action1 = cc.blink(1, 3);
+
+		//var action1 = cc.blink(1, 3);
+		var action1 = cc.delayTime(0.1);
 		var callback = cc.callFunc(this.onLineShown, this);
 		var seq = cc.sequence(action1,callback);
 		this._drawNode.runAction(seq);
@@ -583,8 +721,8 @@ cc.w.slots.LinesNode = cc.Node.extend({//TODO
 //		this._drawNode.runAction(cc.repeat(cc.sequence(action,action.reverse()),-1));
 	},
 	onLineShown:function(){
-		this._drawNode.setVisible(false);
-		cc.w.slots.stopAllCellAnimations();
+		//this._drawNode.setVisible(false);
+		//cc.w.slots.stopAllCellAnimations();
 		cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_LINE_SHOWN,this._currentLineIndex);
 	},
 	createRectStencil:function(size,height){
@@ -646,6 +784,9 @@ cc.w.view.SlotsCellNode = cc.Node.extend({
 		//宽度传0好像还是会有宽度？
 		stencil.drawRect(cc.p(0, 0), cc.p(size,height), color, 0.00001, color);
 		return stencil;
+		//var sp = new cc.Sprite("res/btn.png");
+		//sp.setAnchorPoint(cc.p());
+		//return sp;
 	},
 	getIndex:function(){
 		return this._index;
@@ -657,6 +798,9 @@ cc.w.view.SlotsCellNode = cc.Node.extend({
 	doCellAnimation:function(parent){
         this._aniParent = parent;
         var point = cc.w.slots.LINE_POINTS[this._index];
+        if(point==null||point.getRect()==null){
+        	return;
+        }
         var x = point.getRect().x-35;
         var y = point.getRect().y+35;
         if(this._cellNodeAni==null) {
@@ -724,7 +868,7 @@ cc.w.view.SlotsCellGroupNode = cc.Node.extend({
 		var fs = 10;
 		for (var i = 0; i < cellCount; i++) {
 			var cellNode = new cc.w.view.SlotsCellNode(cellWidth,cellHeight);
-			cellNode.setPosition(0, cellHeight*i)
+			cellNode.setPosition(0, cellHeight*i);
 			if (i==2) {
 				this._cellNodeTop = cellNode;
 				var index = cc.w.slots.computeCellNodeIndex(this._colIndex, 0);
@@ -741,7 +885,7 @@ cc.w.view.SlotsCellGroupNode = cc.Node.extend({
 			if (i==1) {
 				this._cellNodeCenter = cellNode;
 				var index = cc.w.slots.computeCellNodeIndex(this._colIndex, 1);
-				this._cellNodeCenter.setIndex(index)
+				this._cellNodeCenter.setIndex(index);
 //				cc.w.slots.SLOTS_CELL_NODES[index] = this._cellNodeCenter;
 				if (cc.w.slots.MODE_DEBUG_SlotsCellGroupNode) {
 					var label = new cc.LabelTTF("CENTER","Arial",fs);
@@ -754,7 +898,7 @@ cc.w.view.SlotsCellGroupNode = cc.Node.extend({
 			if (i==0) {
 				this._cellNodeBottom = cellNode;
 				var index = cc.w.slots.computeCellNodeIndex(this._colIndex, 2);
-				this._cellNodeBottom.setIndex(index)
+				this._cellNodeBottom.setIndex(index);
 //				cc.w.slots.SLOTS_CELL_NODES[index] = this._cellNodeBottom;
 				if (cc.w.slots.MODE_DEBUG_SlotsCellGroupNode) {
 					var label = new cc.LabelTTF("BOTTOM","Arial",fs);
@@ -791,10 +935,10 @@ cc.w.view.SlotsCellGroupNode = cc.Node.extend({
  * 老虎机的五个竖列中的一个，里面存放四个CELL组（SlotsCellGroupNode）
  */
 cc.w.view.SlotsColumnNode = cc.Node.extend({
-	_groups:null,
-	_headGroup:null,
-	_commonGroups:null,
 	_clippingNode:null,
+    _groups:null,
+    _headGroup:null,
+    _commonGroups:null,
 	_groupHeight:0,
 	_state:0,
 	_result:null,
@@ -805,9 +949,9 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 		this.setContentSize(size,height);
 		this._index = index;
 		this._clippingNode = new cc.ClippingNode(this.createRectStencil(size, height));
-//		this.setStencil();
 		this._clippingNode.setInverted(false);
 		this.addChild(this._clippingNode);
+
 //		this.setAnchorPoint(0.5, 0.5);
 //		var layer = new cc.LayerColor(cc.color(cc.random0To1()*205,cc.random0To1()*205, cc.random0To1()*205, 255));
 //		layer.setContentSize(this.getContentSize());
@@ -1004,6 +1148,9 @@ cc.w.view.SlotsNode = cc.Node.extend({//TODO change cc.w.view to cc.w.slots
 	drawLine:function(lineIndex){
 		if(this._linesNode!=null)this._linesNode.drawLine(lineIndex);
 	},
+    drawAllLines:function(){
+        if(this._linesNode!=null)this._linesNode.drawAllLines();
+    },
 	setupView:function(){
 		//init the actions //cc.delayTime(5);
 //		this.ignoreAnchorPointForPosition(false);
@@ -1041,6 +1188,7 @@ cc.w.view.SlotsNode = cc.Node.extend({//TODO change cc.w.view to cc.w.slots
 					var target = event.getCurrentTarget();
 					cc.w.slots.STATE = cc.w.slots.STATE_STOPED;
 					target.updateView();
+                    target.drawAllLines();
 				}
 			}
 		});    
@@ -1071,6 +1219,31 @@ cc.w.view.SlotsNode = cc.Node.extend({//TODO change cc.w.view to cc.w.slots
 			}
 		});    
 		cc.eventManager.addListener(event_show_line, this);
+		//-----------------
+		var event_stopped = cc.EventListener.create({
+			event: cc.EventListener.CUSTOM,
+			eventName: cc.w.slots.EVENT_STOPPED,
+			callback: function(event){
+				if (event!=null) {
+					var target = event.getCurrentTarget();
+					target._linesNode.reset();
+                    cc.w.slots.stopAllCellAnimations();
+				}
+			}
+		});
+		cc.eventManager.addListener(event_stopped, this);
+		//-----------------
+		var event_effect_finished = cc.EventListener.create({
+			event: cc.EventListener.CUSTOM,
+			eventName: cc.w.slots.EVENT_ON_EFFECT_FINISHED,
+			callback: function(event){
+				if (event!=null) {
+					var target = event.getCurrentTarget();
+					target._linesNode.reset();
+				}
+			}
+		});
+		cc.eventManager.addListener(event_effect_finished, this);
 		//-----------------
 		this.reset();
 	},
@@ -1124,5 +1297,7 @@ cc.w.view.SlotsNode = cc.Node.extend({//TODO change cc.w.view to cc.w.slots
 		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_START);
 		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_SLOTS_STOPPED);
 		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_SHOW_LINE);
+		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_STOPPED);
+		cc.eventManager.removeCustomListeners(cc.w.slots.EVENT_ON_EFFECT_FINISHED);
 	}
 });

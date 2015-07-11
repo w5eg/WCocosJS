@@ -60,6 +60,23 @@ cc.w.util.RetryTimer = cc.Class.extend({
             cc.director.getScheduler().unschedule(this._key,this._target);
     }
 });
+/**
+ *将原始坐标做偏移处理
+ * @param positions
+ * @param {cc.Point}offset
+ * @returns {*}
+ */
+cc.w.util.makeOffsetPositions = function(positions,offset){
+	if(positions==null){
+		return null;
+	}
+	var newPositions = new Array();
+	for(var i=0;i<positions.length;i++){
+		var newPosition = cc.pAdd(positions[i],offset);
+        newPositions.push(newPosition);
+	}
+	return newPositions;
+};
 cc.w.util.RetryTimer.create = function(target,times,interval){
     var instance = new cc.w.util.RetryTimer();
     instance.init(target,times,interval);

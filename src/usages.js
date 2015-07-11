@@ -152,10 +152,11 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
         this.addChild(menu);
         
         //cc.w.slots.doBigAnimation(51,this,this.getContentSize().width/2,this.getContentSize().height/2);
+        //cc.w.slots.doBigAniGold(11,this,this.getContentSize().width/2*0,this.getContentSize().height*0);
         //cc.w.slots.doBloodAddAnimation(1,this,this.getContentSize().width/2,this.getContentSize().height/2);
-        cc.w.slots.doFreeTimesAnimation(1, this, this.getContentSize().width / 2, this.getContentSize().height / 2, function (view) {
-            cc.log(view);
-        }, this);
+//        cc.w.slots.doFreeTimesAnimation(1, this, this.getContentSize().width / 2, this.getContentSize().height / 2, function (view) {
+//            cc.log(view);
+//        }, this);
         cc.w.view.addLongPressListener(this);
     },
     menuItemCallback: function (sender) {

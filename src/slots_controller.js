@@ -74,16 +74,23 @@ cc.w.slots.SlotsAutoLoopContorller = cc.Class.extend({
 cc.w.slots.SlotsBigAnimationController = cc.Class.extend({
     _parentNode:null,
     _position:null,
+	_goldAniParentNode:null,
     ctor:function(parentNode,position){
         this._parentNode = parentNode;
         this._position = position;
     },
+	initGoldAni:function(parentNode){
+		this._goldAniParentNode = parentNode;
+	},
     doEffect:function(score,callBackOnAniOver,target){
         if(this._parentNode==null||this._position==null){
             //callBackOnAniOver.call(this,target);
             callBackOnAniOver();
             return;
         }
+		if(this._goldAniParentNode){
+            cc.w.slots.doBigAniGold(score,this._goldAniParentNode,0,0);
+		}
         cc.w.slots.doBigAnimation(score,this._parentNode,this._position.x,this._position.y,callBackOnAniOver,target);
     }
 });
@@ -123,10 +130,10 @@ cc.w.slots.SlotsBloodIncreaseEffectController = cc.Class.extend({
             for(var i=0;i<specialEffect.linePointIndexes.length;i++){
                 var cellIdx = specialEffect.linePointIndexes[i];
                 var cellNode = cc.w.slots.SLOTS_CELL_NODES[cellIdx];
-                cellNode.doCellAnimation(this._slotsNode._linesNode);
+                if(cellNode)cellNode.doCellAnimation(this._slotsNode._linesNode);
             }
         }
-        this._isRunning = false;
+        
         cc.w.slots.doBloodAddAnimation(specialEffect.getLevel(),this._parentNode,this._position.x,this._position.y,function(view){
         	this._isRunning = false;
         	if(specialEffect.linePointIndexes.length>0){
@@ -207,10 +214,10 @@ cc.w.slots.SlotsFreeLoopContorller = cc.Class.extend({
         	for(var i=0;i<specialEffect.linePointIndexes.length;i++){
         		var cellIdx = specialEffect.linePointIndexes[i];
         		var cellNode = cc.w.slots.SLOTS_CELL_NODES[cellIdx];
-        		cellNode.doCellAnimation(this._slotsNode._linesNode);
+        		if(cellNode)cellNode.doCellAnimation(this._slotsNode._linesNode);
         	}
         }
-        this._isRunning = false;
+        
         cc.w.slots.doFreeTimesAnimation(leftTime,this._parentNode,this._position.x,this._position.y,function(view){
         	this._isRunning = false;
         	if(specialEffect.linePointIndexes.length>0){
@@ -411,20 +418,22 @@ cc.w.slots.BetNodeController = cc.Class.extend({
  * 老虎机和押注模式的切换处理，涉及组件有 SlotsNode,SlotsControl,BetNode,
  */
 cc.w.slots.SlotsController = cc.Class.extend({
-	initialized:false,
+	_initialized:false,
 	_betNodeController:null,
 	_slotsFreeLoopController:null,
 	_slotsBloodIncreaseEffectController:null,
     _slotsStageController:null,
     _slotsBigAnimationController:null,
 	_actions:[
-	          cc.w.slots.EVENT_START,
-	          cc.w.slots.EVENT_SHOW_LINE,
-	          cc.w.slots.EVENT_DO_SPECIAL_EFFECT,
-              cc.w.slots.EVENT_STAGE_CHANGED,
-              cc.w.slots.EVENT_INIT,
-	          cc.w.slots.EVENT_RESULT
-	          ],
+                cc.s.NotificationName.NN_GAME_STEP_OVER,
+
+                cc.w.slots.EVENT_START,
+                cc.w.slots.EVENT_SHOW_LINE,
+                cc.w.slots.EVENT_DO_SPECIAL_EFFECT,
+                cc.w.slots.EVENT_STAGE_CHANGED,
+                cc.w.slots.EVENT_INIT,
+                cc.w.slots.EVENT_RESULT
+              ],
 	addBetNodeController:function(betNodeController){
 		this._betNodeController = betNodeController;
 	},
@@ -441,10 +450,10 @@ cc.w.slots.SlotsController = cc.Class.extend({
         this._slotsBigAnimationController = slotsBigAnimationController;
     },
 	ctor:function(){
-		if (this.initialized) {
+		if (this._initialized) {
 			return;
 		}
-		this.initialized = true;
+		this._initialized = true;
 		for (var i = 0; i < this._actions.length; i++) {
 			var action = this._actions[i];
 			ViewFacade.getInstance().addObserver(action, this);
@@ -459,6 +468,7 @@ cc.w.slots.SlotsController = cc.Class.extend({
         			target._slotsBigAnimationController.doEffect(cc.w.slots.RESULT.score,function(){
         				ViewFacade.getInstance().notifyObserver(
         						new Notification(cc.w.slots.mappingAction(cc.w.slots.EVENT_STOPPED),cc.w.slots.RESULT));
+                        cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_ON_EFFECT_FINISHED);
         			},target);
         		}
         	}
@@ -509,7 +519,7 @@ cc.w.slots.SlotsController = cc.Class.extend({
 			this.initSlots(data);
 			break;
 		case cc.w.slots.EVENT_START:
-			this.start();
+			this.start(data);
 			break;
 		case cc.w.slots.EVENT_SHOW_LINE:
             cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_SHOW_LINE,data);
@@ -537,6 +547,9 @@ cc.w.slots.SlotsController = cc.Class.extend({
                 }
             }
 			break;
+        case cc.s.NotificationName.NN_GAME_STEP_OVER:
+            cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_STOPPED);
+            break;
 		}
 	},
     /**
@@ -558,6 +571,8 @@ cc.w.slots.SlotsController = cc.Class.extend({
 	start:function(data){
 		if (cc.w.slots.STAGE == cc.w.slots.SLOTS_STAGE_NORMAL&&cc.w.slots.STATE==cc.w.slots.STATE_STOPED) {
 			cc.eventManager.dispatchCustomEvent(cc.w.slots.EVENT_START);
+            cc.w.slots.SlotsLoopLines = data;
+            cc.log("cc.w.slots.SlotsLoopLines="+data);
 		}
 	},
     updateSlotsStage:function(data){

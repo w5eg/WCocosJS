@@ -1,3 +1,6 @@
+cc.s = {};
+cc.s.NotificationName = {};
+cc.s.NotificationName.NN_GAME_STEP_OVER = "cc.s.NotificationName.NN_GAME_STEP_OVER";
 var res = 
 [
    "res/HelloWorld.png",

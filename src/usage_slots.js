@@ -19,7 +19,7 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 		switch (notificationName){
 		case cc.w.slots.EVENT_START:
 			cc.log("=====[EVENT_START]====="+cc.w.slots.STAGE);
-			cc.log("=====[ttt]====="+this.addChild(data[0]));
+			//cc.log("=====[ttt]====="+this.addChild(data[0]));
 			break;
 		case cc.w.slots.EVENT_BET_DONE:
 			cc.log("=====[EVENT_BET_DONE]=====",data.choice,data.multiple);
@@ -217,10 +217,11 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
          * @param maxFreeLoopLabel 免费强攻剩余次数LABEL
          */
         freeLoopController.init(100,5000,minLoopCostLabel,minFreeLoopLabel,maxLoopBtn,maxLoopCostLabel,maxFreeLoopLabel);
-        freeLoopController.initAnimation(this,cc.p(this.getContentSize().width/2,this.getContentSize().height/2),this._slotsNode);
+        freeLoopController.initAnimation(this,cc.p(this.getContentSize().width/2,this.getContentSize().height/2+200),this._slotsNode);
         this._slotsController.addSlotsFreeLoopController(freeLoopController);
         //添加大动画特效控制器
         var bigAniController = new cc.w.slots.SlotsBigAnimationController(this,cc.p(this.getContentSize().width/2,this.getContentSize().height/2));
+		bigAniController.initGoldAni(this);
         this._slotsController.addSlotsBigAnimationController(bigAniController);
         //添加加血特效控制器
         var bloodIncreaseEffectController = new cc.w.slots.SlotsBloodIncreaseEffectController();
@@ -274,11 +275,18 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
 			ViewFacade.getInstance().removeObserver(action, this);
 		}
 	},
+    _slotsLoopLines:cc.w.slots.SLOTS_LOOP_LINES_MIN,
 	startAction:function(){
 		cc.log("state==================="+cc.w.slots.STATE);
 		if (cc.w.slots.STATE==cc.w.slots.STATE_STOPED) {
 			ViewFacade.getInstance().notifyObserver(
-					new Notification(cc.w.slots.mappingAction(cc.w.slots.EVENT_START),[new ccui.Button("res/btn1.png")]));
+					//new Notification(cc.w.slots.mappingAction(cc.w.slots.EVENT_START),[new ccui.Button("res/btn1.png")]));
+					new Notification(cc.w.slots.mappingAction(cc.w.slots.EVENT_START),this._slotsLoopLines));
+            if(this._slotsLoopLines == cc.w.slots.SLOTS_LOOP_LINES_MIN){
+                this._slotsLoopLines = cc.w.slots.SLOTS_LOOP_LINES_MAX;
+            }else{
+                this._slotsLoopLines = cc.w.slots.SLOTS_LOOP_LINES_MIN;
+            }
             this.testResult();
 		}else{
 		}
@@ -368,13 +376,17 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
                 "1,1,1,1,1,"+
                 "2,2,2,2,2,"+
                 "3,3,3,3,3";
-            var linesData = //线数据，用“:”分隔为三部分，第一部分为位置索引，从0-14;第二部分为星级数据;第三部分为线分数
+            var linesData = //线数据，用“:”分隔为三部分，第一部分为位置索引，从0-14;第二部分为星级数据;第三部分为线分数;第四部分为线ID
                 [
-                    "0,1,2,3,4:2:11",
-                    "5,6,7,8,9:3:31",
-                    "10,11,12,13,14:4:100",
-                    "0,1,7,13,14:5:21",
-                    "5,11,7,13,9:4:41"
+                    "0,1,2,3,4:2:11:1",
+                    "5,6,7,8,9:3:31:2",
+                    "10,11,12,13,14:4:100:3",
+                    "0,1,7,13,14:5:21:4",
+                    "0,1,7,13,14:5:21:5",
+                    "0,1,7,13,14:5:21:6",
+                    "0,1,7,13,14:5:21:7",
+                    "0,1,7,13,14:5:21:8",
+                    "5,11,7,13,9:4:41:9"
                 ];
             var specialEffectsData =//特效数据，用“:”分隔为两部分，前部分为位置索引，从0-14;后部分为星级数据，1表示免费次数，2表示加血
                 [
@@ -399,8 +411,6 @@ cc.w.usage.UsageLayerSlots = cc.w.view.UsageBaseLayer.extend({
         }, 2, 0, 0, false);
     }
 });
-
-
 cc.w.UsageScene = cc.Scene.extend({
 	_className:"WScene",
 	ctor:function () {
