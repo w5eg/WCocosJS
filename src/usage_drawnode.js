@@ -10,7 +10,7 @@ cc.w.usage.UsageLayerDrawNode = cc.w.view.UsageBaseLayer.extend({
 		cc.log(nums.indexOf(3));
 		cc.log(nums.indexOf(100));//可用于判断是否包含
 		var array = "1,2,3,4,5:3".split(":")[0].split(",");
-		array.push("abc")
+		array.push("abc");
 		cc.log(array);
 	},
 	setupView:function(){

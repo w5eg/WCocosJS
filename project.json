@@ -61,6 +61,7 @@
     "src/util/encoding.js",
     "src/w.js",
     "src/w_net_socket.js",
+    "src/net/data_manager.js",
     "src/man_animation.js",
     "src/other_animation.js",
     "src/notification/Notification.js",

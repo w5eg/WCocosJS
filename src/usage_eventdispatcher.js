@@ -13,7 +13,7 @@ cc.w.usage.UsageLayerEventDispatcher = cc.w.view.UsageBaseLayer.extend({
 		item.attr({
 			x:size.width/2,
 			y:size.height/2
-		})
+		});
 		item.setFontSize(36);
 		item.setFontName("Times New Roman");
 		var menu = new cc.Menu(item);
@@ -31,7 +31,7 @@ cc.w.usage.UsageLayerEventDispatcher = cc.w.view.UsageBaseLayer.extend({
 		cc.eventManager.addCustomListener(cc.game.EVENT_SHOW, function(event){ 
 			if(event!=null)cc.log("cc.game.EVENT_SHOW"); 
 		});
-		cc.eventManager.addCustomListener(CUSTOM_EVENT_NAMES.TEST, this.testCustomEventCallback)
+		cc.eventManager.addCustomListener(CUSTOM_EVENT_NAMES.TEST, this.testCustomEventCallback);
 //		cc.eventManager.removeCustomListeners(CUSTOM_EVENT_NAMES.TEST);
 		var event_start = cc.EventListener.create({
 			event: cc.EventListener.CUSTOM,

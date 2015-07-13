@@ -1,9 +1,9 @@
 /**
  * Created by w5e on 2015/7/2.
  */
-/**
- * 事件监听器
- * var listener = cc.w.net.WebSocketEventListener.create({
+/*
+  事件监听器
+  var listener = cc.w.net.WebSocketEventListener.create({
 			onOpen:function(webSocket){
 			},
 			onMessage:function(webSocket,data){
@@ -13,12 +13,21 @@
 			onClose:function(webSocket){
 			}
 		});
+  或 使用new 的方式
  */
 cc.w.net.WebSocketEventListener = cc.Class.extend({
     onOpen:null,
     onMessage:null,
     onError:null,
-    onClose:null
+    onClose:null,
+    ctor:function(argObj){
+        if(argObj){
+            if(argObj.onOpen)this.onOpen = argObj.onOpen;
+            if(argObj.onMessage)this.onMessage = argObj.onMessage;
+            if(argObj.onError)this.onError = argObj.onError;
+            if(argObj.onClose)this.onClose = argObj.onClose;
+        }
+    }
 });
 cc.w.net.WebSocketEventListener.create = function(argObj){
 	var instance =  new cc.w.net.WebSocketEventListener();
@@ -48,6 +57,7 @@ cc.w.net.WebSocketEventListener.create = function(argObj){
 			}
 		});
 	var ws = cc.w.net.WebSocket.create(listener,"ws://192.168.1.199:3000");
+    或 ws = new cc.w.new.WebSocket(listener,"ws://192.168.1.199:3000");
  */
 cc.w.net.WebSocket = cc.Class.extend({
     _WebSocket:WebSocket || window.WebSocket || window.MozWebSocket,

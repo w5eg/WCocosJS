@@ -44,7 +44,7 @@ manAnimation.Sprite = cc.Sprite.extend({
 		this.normalSf1 = spriteFrameCache.getSpriteFrame("normal1.png");
 		if (this.normalSf1) {
 			var normalSp = new cc.Sprite(this.normalSf1);
-			cc.SpriteFrame
+			cc.SpriteFrame;
 			this._super();
 			this.setContentSize(normalSp.getContentSize());
 			this.normalSprite = new cc.Sprite(this.normalSf1);

@@ -274,7 +274,7 @@ cc.w.slots.Line = cc.Class.extend({
 	},
 	addPoint:function(linePoint){
 		if (this._linePints==null) {
-			this._linePints = new Array();
+			this._linePints = [];
 		}
 		this._linePints.push(linePoint);
 	}
@@ -338,7 +338,7 @@ cc.w.slots.LinePoint = cc.Class.extend({
 	},
 	relateToLine:function(line){
 		if (this._lines==null) {
-			this._lines = new Array();
+			this._lines = [];
 		}else if(this._lines.indexOf(line)!=-1){
 			return;
 		}
@@ -365,7 +365,7 @@ cc.w.slots.LinePoint = cc.Class.extend({
         //    }
         //}
 
-		var points = new Array();
+		var points = [];
 		var centerPoint = cc.p(posX,posY);
 		
 		
@@ -447,7 +447,7 @@ cc.w.slots.Result = cc.Class.extend({
 			return;
 		}
 		
-		this._specialEffects = new Array();
+		this._specialEffects = [];
 		
 		for (var seIdx = 0; seIdx < data.length; seIdx++) {
 			var pointsData = data[seIdx];
@@ -472,7 +472,7 @@ cc.w.slots.Result = cc.Class.extend({
 			return;
 		}
 		
-		this._lines = new Array();
+		this._lines = [];
 		
 		for (var lineIndex = 0; lineIndex < data.length; lineIndex++) {
 			var lineData = data[lineIndex];
@@ -480,9 +480,9 @@ cc.w.slots.Result = cc.Class.extend({
 			if (lineDataArray.length>=4) {
 				var line = new cc.w.slots.Line();
 				var linePointIndexes = lineDataArray[0].split(",");
-				var lineLen = new Number(lineDataArray[1]);
-                var score = new Number(lineDataArray[2]);
-                var lineId = new Number(lineDataArray[3]);
+				var lineLen = Number(lineDataArray[1]);
+                var score = Number(lineDataArray[2]);
+                var lineId = Number(lineDataArray[3]);
 				line.len = lineLen;
                 line.score = score;
                 line.lineId = lineId;
@@ -573,7 +573,7 @@ cc.w.slots.LinesNode = cc.Node.extend({//TODO
 		this._drawNode = new cc.DrawNode();
 		this._clippingNode.addChild(this._drawNode, 1);
 		if (cc.w.slots.LINE_POINTS==null) {
-			cc.w.slots.LINE_POINTS = new Array();
+			cc.w.slots.LINE_POINTS = [];
 			for (var i = 0; i < cc.w.slots.COLUMN_COUNT*cc.w.slots.ROW_COUNT; i++) {
 				var linePoint = new cc.w.slots.LinePoint();
 				linePoint.index = i;
@@ -613,7 +613,7 @@ cc.w.slots.LinesNode = cc.Node.extend({//TODO
             return false;
         }
         var lineSize = 15;
-        var positions = new Array();
+        var positions = [];
         var lineColor = cc.w.slots.getLineColor(line.lineId);
         //转化linePoint to cc.p()数组，并画线
         for (var i = 0; i < line.getPoints().length; i++) {
@@ -820,7 +820,7 @@ cc.w.view.SlotsCellNode = cc.Node.extend({
             this._cellNodeAni = null;
         }
 	}
-});
+});;
 /**
  *格子组， 实现老虎机动画时的辅助组件，一个格子组里面有三个格子（SlotsCell）
  */
@@ -960,8 +960,8 @@ cc.w.view.SlotsColumnNode = cc.Node.extend({
 	},
 	setupView:function(){
 		this.reset();
-		this._groups = new Array();
-		this._commonGroups = new Array();
+		this._groups = [];
+		this._commonGroups = [];
 		//每一列有四个组。
 		var groupCount = 4;
 		var groupWidth = this.getContentSize().width;
@@ -1160,7 +1160,7 @@ cc.w.view.SlotsNode = cc.Node.extend({//TODO change cc.w.view to cc.w.slots
 //		var sp = new cc.Sprite("res/CloseNormal.png");
 //		sp.setPosition(this.getContentSize().width/2, this.getContentSize().height/2);
 //		this.addChild(sp);
-		this._columnNodes = new Array();
+		this._columnNodes = [];
 		var columnNodeWidth = this.getContentSize().width/cc.w.slots.COLUMN_COUNT;
 		var columnNodeHeight = this.getContentSize().height;
 		for (var i = 0; i < cc.w.slots.COLUMN_COUNT; i++) {
@@ -1280,7 +1280,7 @@ cc.w.view.SlotsNode = cc.Node.extend({//TODO change cc.w.view to cc.w.slots
 			var callFunc = cc.callFunc(function(sender,data){
 				this._columnNodes[data].start();
 			},this,i);
-			var seq = cc.sequence(delayTime,callFunc)
+			var seq = cc.sequence(delayTime,callFunc);
 			this.runAction(seq);
 		}
 	},

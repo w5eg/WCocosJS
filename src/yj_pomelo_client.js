@@ -10,7 +10,7 @@ cc.yj.storeClient.buyItem = function(itemId,itemNum){
 			PropNum: 1
 	};
 
-	var propShop = new Array();
+	var propShop = [];
 	propShop[0] = param1;
 	var obj = propShop;
 	

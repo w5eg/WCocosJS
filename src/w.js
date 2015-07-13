@@ -70,7 +70,7 @@ cc.w.util.makeOffsetPositions = function(positions,offset){
 	if(positions==null){
 		return null;
 	}
-	var newPositions = new Array();
+	var newPositions = [];
 	for(var i=0;i<positions.length;i++){
 		var newPosition = cc.pAdd(positions[i],offset);
         newPositions.push(newPosition);
@@ -180,16 +180,16 @@ cc.w.getPointThatAroundTheRectByAngle = function(angleF, rectSize){
 	center.x = x;
 	center.y = y;
 	return center;
-}
+};
 abs = function(d){
 	return Math.abs(d);
-}
+};
 sin = function(d){
 	return Math.sin(d);
-}
+};
 cos = function(d){
 	return Math.cos(d);
-}
+};
 cc.w.action = {};
 cc.w.math = {};
 cc.w.math.computeAngle = function(centerPoint,aroundPoint){
@@ -197,7 +197,7 @@ cc.w.math.computeAngle = function(centerPoint,aroundPoint){
 //	cc.log("pSub x="+p.x +" y="+p.y);
 	var angle = cc.pToAngle(cc.pSub(centerPoint, aroundPoint));
 	return angle/Math.PI*180;
-}
+};
 /**
  * 左右摇摆动画
  * @param node 传入当前要做动画的节点。因为动画执行之前要设置为最小角度
@@ -223,7 +223,7 @@ cc.w.action.swing = function(node,duration,startAngle){
 	var swingL2R = cc.rotateBy(duration*(Math.abs(startAngle)/_maxAngle), _rotateBy).easing(cc.easeInOut(1.5));
 	var swingAction = cc.sequence(swingL2R,swingL2R.reverse());
 	return swingAction.repeatForever();
-}
+};
 cc.w.currentNode = null;//???为什么不定义在CollisionLayer内部？？？
 cc.w.CollisionLayer = cc.LayerColor.extend({
 	_nodes : [],
@@ -340,7 +340,7 @@ cc.w.CollisionLayer = cc.LayerColor.extend({
 		
 		this._stateLabel = new cc.LabelTTF(""+this._state,null,20);
 		this.addChild(this._stateLabel);
-		this._stateLabel.setAnchorPoint(0, 1)
+		this._stateLabel.setAnchorPoint(0, 1);
 		this._stateLabel.setPosition(0, cc.director.getWinSize().height);
 		
 		var self = this;
@@ -477,7 +477,7 @@ cc.w.CollisionLayer = cc.LayerColor.extend({
 		this._totalLen = cc.pDistance(this._centerPoint, this._endPoint);
 	},
 	detectCollistion:function(pointNode){
-		var node = cc.w.CollisionDetectionUtil.nodeInWhithNode(pointNode, this._nodes)
+		var node = cc.w.CollisionDetectionUtil.nodeInWhithNode(pointNode, this._nodes);
 		var cNode = cc.w.currentNode;
 		if (node&&node!=cNode) {
 			cc.w.currentNode = node;
@@ -938,114 +938,114 @@ utf8.parse = function(byteArray) {
  * ……
  *
  */
-//function Map() {
-//	this.elements = new Array();
-//
-//	//获取MAP元素个数
-//	this.size = function() {
-//		return this.elements.length;
-//	}
-//
-//	//判断MAP是否为空
-//	this.isEmpty = function() {
-//		return (this.elements.length < 1);
-//	}
-//
-//	//删除MAP所有元素
-//	this.clear = function() {
-//		this.elements = new Array();
-//	}
-//
-//	//向MAP中增加元素（key, value) 
-//	this.put = function(_key, _value) {
-//		this.elements.push( {
-//			key : _key,
-//			value : _value
-//		});
-//	}
-//
-//	//删除指定KEY的元素，成功返回True，失败返回False
-//	this.remove = function(_key) {
-//		var bln = false;
-//		try {
-//			for (i = 0; i < this.elements.length; i++) {
-//				if (this.elements[i].key == _key) {
-//					this.elements.splice(i, 1);
-//					return true;
-//				}
-//			}
-//		} catch (e) {
-//			bln = false;
-//		}
-//		return bln;
-//	}
-//
-//	//获取指定KEY的元素值VALUE，失败返回NULL
-//	this.get = function(_key) {
-//		try {
-//			for (i = 0; i < this.elements.length; i++) {
-//				if (this.elements[i].key == _key) {
-//					return this.elements[i].value;
-//				}
-//			}
-//		} catch (e) {
-//			return null;
-//		}
-//	}
-//
-//	//获取指定索引的元素（使用element.key，element.value获取KEY和VALUE），失败返回NULL
-//	this.element = function(_index) {
-//		if (_index < 0 || _index >= this.elements.length) {
-//			return null;
-//		}
-//		return this.elements[_index];
-//	}
-//
-//	//判断MAP中是否含有指定KEY的元素
-//	this.containsKey = function(_key) {
-//		var bln = false;
-//		try {
-//			for (i = 0; i < this.elements.length; i++) {
-//				if (this.elements[i].key == _key) {
-//					bln = true;
-//				}
-//			}
-//		} catch (e) {
-//			bln = false;
-//		}
-//		return bln;
-//	}
-//
-//	//判断MAP中是否含有指定VALUE的元素
-//	this.containsValue = function(_value) {
-//		var bln = false;
-//		try {
-//			for (i = 0; i < this.elements.length; i++) {
-//				if (this.elements[i].value == _value) {
-//					bln = true;
-//				}
-//			}
-//		} catch (e) {
-//			bln = false;
-//		}
-//		return bln;
-//	}
-//
-//	//获取MAP中所有VALUE的数组（ARRAY）
-//	this.values = function() {
-//		var arr = new Array();
-//		for (i = 0; i < this.elements.length; i++) {
-//			arr.push(this.elements[i].value);
-//		}
-//		return arr;
-//	}
-//
-//	//获取MAP中所有KEY的数组（ARRAY）
-//	this.keys = function() {
-//		var arr = new Array();
-//		for (i = 0; i < this.elements.length; i++) {
-//			arr.push(this.elements[i].key);
-//		}
-//		return arr;
-//	}
-//}
+function Map() {
+	this.elements = [];
+
+	//获取MAP元素个数
+	this.size = function() {
+		return this.elements.length;
+	};
+
+	//判断MAP是否为空
+	this.isEmpty = function() {
+		return (this.elements.length < 1);
+	};
+
+	//删除MAP所有元素
+	this.clear = function() {
+		this.elements = [];
+	};
+
+	//向MAP中增加元素（key, value)
+	this.put = function(_key, _value) {
+		this.elements.push( {
+			key : _key,
+			value : _value
+		});
+	};
+
+	//删除指定KEY的元素，成功返回True，失败返回False
+	this.remove = function(_key) {
+		var bln = false;
+		try {
+			for (var i = 0; i < this.elements.length; i++) {
+				if (this.elements[i].key == _key) {
+					this.elements.splice(i, 1);
+					return true;
+				}
+			}
+		} catch (e) {
+			bln = false;
+		}
+		return bln;
+	};
+
+	//获取指定KEY的元素值VALUE，失败返回NULL
+	this.get = function(_key) {
+		try {
+			for (var i = 0; i < this.elements.length; i++) {
+				if (this.elements[i].key == _key) {
+					return this.elements[i].value;
+				}
+			}
+		} catch (e) {
+			return null;
+		}
+	};
+
+	//获取指定索引的元素（使用element.key，element.value获取KEY和VALUE），失败返回NULL
+	this.element = function(_index) {
+		if (_index < 0 || _index >= this.elements.length) {
+			return null;
+		}
+		return this.elements[_index];
+	};
+
+	//判断MAP中是否含有指定KEY的元素
+	this.containsKey = function(_key) {
+		var bln = false;
+		try {
+			for (var i = 0; i < this.elements.length; i++) {
+				if (this.elements[i].key == _key) {
+					bln = true;
+				}
+			}
+		} catch (e) {
+			bln = false;
+		}
+		return bln;
+	};
+
+	//判断MAP中是否含有指定VALUE的元素
+	this.containsValue = function(_value) {
+		var bln = false;
+		try {
+			for (var i = 0; i < this.elements.length; i++) {
+				if (this.elements[i].value == _value) {
+					bln = true;
+				}
+			}
+		} catch (e) {
+			bln = false;
+		}
+		return bln;
+	};
+
+	//获取MAP中所有VALUE的数组（ARRAY）
+	this.values = function() {
+		var arr = [];
+		for (var i = 0; i < this.elements.length; i++) {
+			arr.push(this.elements[i].value);
+		}
+		return arr;
+	};
+
+	//获取MAP中所有KEY的数组（ARRAY）
+	this.keys = function() {
+		var arr = [];
+		for (var i = 0; i < this.elements.length; i++) {
+			arr.push(this.elements[i].key);
+		}
+		return arr;
+	};
+};

@@ -50,8 +50,8 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
     _bgImage: null,
     ctor: function () {
         this._super();
-//        var layer = new cc.LayerColor(cc.color(cc.random0To1() * 205, cc.random0To1() * 205, cc.random0To1() * 205, 255));
-        var layer = new cc.LayerColor(cc.color("#ff0000"));
+        var layer = new cc.LayerColor(cc.color(cc.random0To1() * 205, cc.random0To1() * 205, cc.random0To1() * 205, 255));
+//        var layer = new cc.LayerColor(cc.color("#ff0000"));
         this.addChild(layer);
         this.setupView();
         var keyboardListener = cc.EventListener.create({
@@ -69,12 +69,14 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
     },
     onExit:function(){
     	this._super();
-    	this._webSocket.close();
+    	if(this._webSocket)this._webSocket.close();
+        if(this._dataManager)this._dataManager.release();
         cc.log(new Date()-this._testStartTime);
     },
     onEnter: function () {
         this._super();
         this.testWebSocket();
+        //this.testDataManager();
 
         new TestClass("abc").doSth();
 
@@ -137,7 +139,7 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
 
 
 //		sp.setColor(cc.color(255, 255, 0, 255));
-        var menuItems = new Array();
+        var menuItems = [];
 //		cc.MenuItemFont.setFontName("Times New Roman");  
 //		cc.MenuItemFont.setFontSize(86); 
         for (var i = 0; i < cc.w.usage.usages.length; i++) {
@@ -163,8 +165,48 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
 //		cc.director.end();
         cc.w.usage.pushUsageScene(sender.getTag())
     },
+    _dataManager:null,
+    testDataManager:function(){
+        var listener = new cc.w.net.WebSocketEventListener({
+            onOpen: function () {
+                cc.log("=====[testDataManager onOpen]=====");
+            },
+            onMessage: function (data) {
+                cc.log("=====[testDataManager onMessage]=====");
+            },
+            onError: function () {
+                cc.log("=====[testDataManager onError]=====");
+            },
+            onClose: function () {
+                cc.log("=====[testDataManager onClose]=====");
+            }
+        });
+        this._dataManager = new cc.slots.DataManager(listener);
+        this._dataManager.connect();
+        var req = new cc.slots.net.Request(function(jsonData){
+            if(jsonData){
+                cc.log("=====[testDataManager onResponse]====="+jsonData);
+            }
+        },1003,1004,'{"category":1}');
+        this._dataManager.request(req);
+    },
     _webSocket:null,
     testWebSocket: function () {
+        var map = new Map();
+        map.put(111,function(){
+            cc.log("sssssssssssssssssssssss");
+        });
+        var fun = map.get(111);
+        map.remove(111);
+        cc.log(map.get(111));
+
+        var req = new cc.slots.net.Request(function(){},111,222,'{}');
+        var self = this;
+        req.startTimeoutTimer(function(){
+            cc.log("你就是我的唯一两个世界都变形"+self._testStartTime);
+        },this);
+        req.stopTimeoutTimer();
+        fun();
 //		var ws = new WebSocket("ws://192.168.1.199:3000");
 //		ws.onopen = function(evt) {
 //			cc.log("WS was opened.");
@@ -216,14 +258,15 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
     	
     	
     	var preLen = 8;
-    	var dataStr  = '{"roomID":1}';
+    	//var dataStr  = '{"roomID":1}';
+    	var dataStr  = '{"category":1}';
     	var charArr = utf8.toByteArray(dataStr);
     	var dataLen = charArr.length;
         cc.log("dataLen:"+dataLen);
         var buffer = new ArrayBuffer(preLen+dataLen);
         cc.log("bufferLen:"+buffer.byteLength);
     	var u32a = new Uint32Array(buffer,0,2);
-    	u32a[0] = 1003;
+    	u32a[0] = 1005;
     	u32a[1] = buffer.byteLength;
     	var dv = new DataView(buffer);
         for(var i= 0;i<charArr.length;i++){
