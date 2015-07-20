@@ -1,69 +1,10 @@
 cc.slots = {};
 cc.slots.net = {};
 cc.slots.net.HOST = "ws://192.168.1.199:3000";
-/**
- * 请求对象，目前要求有_requestId和_responseId。
- * @type {Function}
- */
-cc.slots.net.Request = cc.Class.extend({
-    _isTimeout:false,
-    _timeout:5,
-    _params:null,
-    _requestId:-1,
-    _responseId:-1,
-    _responseCallback:null,
-    _timeoutCallback:null,
-    _timeoutKey:null,
-    /**
-     * @param responseCallback 响应回调 function(jsonData){}
-     * @param requestId 请求ID，目前为4Byte的无符号数字
-     * @param responseId 响应ID，目前为4Byte的无符号数字
-     * @param params 请求参数，为Json格式字符串，可为空
-     */
-    ctor:function(responseCallback,requestId,responseId,params){
-        this._responseCallback = responseCallback;
-        this._requestId = requestId;
-        this._responseId = responseId;
-        this._params = params;
-    },
-    startTimeoutTimer:function(timeoutCallback){
-        if(timeoutCallback==null||this._isTimeout){
-            return;
-        }
-        this._timeoutCallback = timeoutCallback;
-        this._timeoutKey = this.__instanceId + "";
-        //callback, target, interval, repeat, delay, paused, key
-        cc.director.getScheduler().schedule(function(){
-            this._isTimeout = true;
-            this._timeoutCallback();
-        },this, this._timeout, 0, 0, false,this._timeoutKey);
-    },
-    stopTimeoutTimer:function(){
-        this._isTimeout = true;
-        if(this._timeoutKey==null){
-            return;
-        }
-        cc.director.getScheduler().unschedule(this._timeoutKey,this)
-    },
-    getRequestId:function(){
-        return this._requestId;
-    },
-    getResponseId:function(){
-        return this._responseId;
-    },
-    getParams:function(){
-        return this._params;
-    },
-    getResponseCallback:function(){
-        if(this._isTimeout){
-            return null;
-        }
-        return this._responseCallback;
-    },
-    isInvalid:function(){
-        return this._isTimeout;
-    }
-});
+cc.slots.net.RECONNECT_TIME = 5;//断线重连次数
+cc.slots.net.RECONNECT_INTERVAL = 3;//断线重连间隔秒数
+cc.slots.net.DEFAULT_TIMEOUT = 30;//请求超时时间
+
 cc.slots.DataManager = cc.Class.extend({
     _webSocket:null,
     _l:null,
@@ -137,7 +78,7 @@ cc.slots.DataManager = cc.Class.extend({
             }
         });
         this._webSocket= new cc.w.net.WebSocket(mListener, _host);
-        this._webSocket.enableReconnection(this, 5, 3);
+        this._webSocket.enableReconnection(this, cc.slots.net.RECONNECT_TIME, cc.slots.net.RECONNECT_INTERVAL);
     },
     connect:function(){
         if(this._webSocket){
@@ -153,6 +94,14 @@ cc.slots.DataManager = cc.Class.extend({
             cc.w.log.e("cc.slots.DataManager","request() params error");
             return;
         }
+        if(this._requestMap.get(request.getRequestId())){//如果之前有同样的请求，则不处理这个请求
+            cc.w.log.e("cc.slots.DataManager","request exists");
+            return;
+        }
+        //if(!this._webSocket._isOpened()){//如果没有连接，则直接执行回调
+        //    request.getResponseCallback()();
+        //    return;
+        //}
         this._requestMap.put(request.getRequestId(),request);
         var self = this;
         var preLen = 8;
@@ -176,7 +125,71 @@ cc.slots.DataManager = cc.Class.extend({
             }
         }
         this._webSocket.send(buffer);
-        cc.log("wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
         //cc.log("on send:"+new TextDecoder('utf-8').decode(buffer.slice(8)));
+        cc.log("=====cc.slots.DataManager request DONE!=====");
+        request.startTimeoutTimer(request.getResponseCallback());
+    }
+});
+/**
+ * 请求对象，目前要求有_requestId和_responseId。
+ * @type {Function}
+ */
+cc.slots.net.Request = cc.Class.extend({
+    _isTimeout:false,
+    _timeout:cc.slots.net.DEFAULT_TIMEOUT,
+    _params:null,
+    _requestId:-1,
+    _responseId:-1,
+    _responseCallback:null,
+    _timeoutCallback:null,
+    _timeoutKey:null,
+    /**
+     * @param responseCallback 响应回调 function(jsonData){}
+     * @param requestId 请求ID，目前为4Byte的无符号数字
+     * @param responseId 响应ID，目前为4Byte的无符号数字
+     * @param params 请求参数，为Json格式字符串，可为空
+     */
+    ctor:function(responseCallback,requestId,responseId,params){
+        this._responseCallback = responseCallback;
+        this._requestId = requestId;
+        this._responseId = responseId;
+        this._params = params;
+    },
+    startTimeoutTimer:function(timeoutCallback){
+        if(timeoutCallback==null||this._isTimeout){
+            return;
+        }
+        this._timeoutCallback = timeoutCallback;
+        this._timeoutKey = this.__instanceId + "";
+        //callback, target, interval, repeat, delay, paused, key
+        cc.director.getScheduler().schedule(function(){
+            this._isTimeout = true;
+            this._timeoutCallback();
+        },this, this._timeout, 0, 0, false,this._timeoutKey);
+    },
+    stopTimeoutTimer:function(){
+        this._isTimeout = true;
+        if(this._timeoutKey==null){
+            return;
+        }
+        cc.director.getScheduler().unschedule(this._timeoutKey,this)
+    },
+    getRequestId:function(){
+        return this._requestId;
+    },
+    getResponseId:function(){
+        return this._responseId;
+    },
+    getParams:function(){
+        return this._params;
+    },
+    getResponseCallback:function(){
+        if(this._isTimeout){
+            return null;
+        }
+        return this._responseCallback;
+    },
+    isInvalid:function(){
+        return this._isTimeout;
     }
 });

@@ -75,8 +75,8 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
     },
     onEnter: function () {
         this._super();
-        this.testWebSocket();
-        //this.testDataManager();
+//        this.testWebSocket();
+        this.testDataManager();
 
         new TestClass("abc").doSth();
 
@@ -186,6 +186,8 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
         var req = new cc.slots.net.Request(function(jsonData){
             if(jsonData){
                 cc.log("=====[testDataManager onResponse]====="+jsonData);
+            }else{
+                cc.log("=====[testDataManager onResponse]===== TIMEOUT!!!!!");
             }
         },1003,1004,'{"category":1}');
         this._dataManager.request(req);

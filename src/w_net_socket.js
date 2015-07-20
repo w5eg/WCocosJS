@@ -158,7 +158,7 @@ cc.w.net.WebSocket = cc.Class.extend({
             //        }
             //    }
             //}else{
-                cc.log("Reconnecting="+(self._retryTimer4Reconnecting._times-leftTime));
+                cc.log("reconnecting="+(self._retryTimer4Reconnecting._times-leftTime));
                 self.connect();
             }
         });
