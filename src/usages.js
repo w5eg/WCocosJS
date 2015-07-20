@@ -167,9 +167,11 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
     },
     _dataManager:null,
     testDataManager:function(){
+        var self = this;
         var listener = new cc.w.net.WebSocketEventListener({
             onOpen: function () {
                 cc.log("=====[testDataManager onOpen]=====");
+                self.sendData1();
             },
             onMessage: function (data) {
                 cc.log("=====[testDataManager onMessage]=====");
@@ -183,14 +185,7 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
         });
         this._dataManager = new cc.slots.DataManager(listener);
         this._dataManager.connect();
-        var req = new cc.slots.net.Request(function(jsonData){
-            if(jsonData){
-                cc.log("=====[testDataManager onResponse]====="+jsonData);
-            }else{
-                cc.log("=====[testDataManager onResponse]===== TIMEOUT!!!!!");
-            }
-        },1003,1004,'{"category":1}');
-        this._dataManager.request(req);
+
     },
     _webSocket:null,
     testWebSocket: function () {
@@ -208,7 +203,7 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
             cc.log("你就是我的唯一两个世界都变形"+self._testStartTime);
         },this);
         req.stopTimeoutTimer();
-        fun();
+        
 //		var ws = new WebSocket("ws://192.168.1.199:3000");
 //		ws.onopen = function(evt) {
 //			cc.log("WS was opened.");
@@ -236,7 +231,7 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
                 	cc.log("=====[onMessage]=====" +msgId);
                 	cc.log("=====[onMessage]=====" +len);
                 	cc.log("=====[onMessage]=====" +content);
-                	cc.log("=====[onMessage]=====" +JSON.parse(content)[0].RoomName);
+                	cc.log("=====[onMessage]=====" +JSON.parse(content));
                 }
 //				webSocket.close();
             },
@@ -252,6 +247,17 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
         ws.connect();
         this._webSocket = ws;
     },
+    sendData1:function(){
+        var req = new cc.slots.net.Request(function(jsonData){
+            if(jsonData){
+                cc.log("=====[testDataManager onResponse]====="+jsonData);
+            }else{
+                cc.log("=====[testDataManager onResponse]=====ERROR OR TIMEOUT!!!!!");
+            }
+//        },1003,1004,'{"category":1}');
+        },1003,1004,'{"roomID":1}');
+        this._dataManager.request(req);
+    },
     sendData: function (ws) {
 //        var u32a = new Uint32Array(2);
 //        u32a[0] = 1001;
@@ -260,15 +266,15 @@ cc.w.view.UsagesLayer = cc.Layer.extend({
     	
     	
     	var preLen = 8;
-    	//var dataStr  = '{"roomID":1}';
-    	var dataStr  = '{"category":1}';
+    	var dataStr  = '{"roomID":1}';
+//    	var dataStr  = '{"category":1}';
     	var charArr = utf8.toByteArray(dataStr);
     	var dataLen = charArr.length;
         cc.log("dataLen:"+dataLen);
         var buffer = new ArrayBuffer(preLen+dataLen);
         cc.log("bufferLen:"+buffer.byteLength);
     	var u32a = new Uint32Array(buffer,0,2);
-    	u32a[0] = 1005;
+    	u32a[0] = 1003;
     	u32a[1] = buffer.byteLength;
     	var dv = new DataView(buffer);
         for(var i= 0;i<charArr.length;i++){

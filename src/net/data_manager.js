@@ -8,7 +8,7 @@ cc.slots.net.DEFAULT_TIMEOUT = 30;//请求超时时间
 cc.slots.DataManager = cc.Class.extend({
     _webSocket:null,
     _l:null,
-    _requestMap:null,//保存cc.slots.net.Request对象的Map,Key为requestId
+    _requestMap:null,//保存cc.slots.net.Request对象的Map,Key为responseId
     release:function(){
         this._l = null;
         if(this._webSocket){
@@ -52,7 +52,7 @@ cc.slots.DataManager = cc.Class.extend({
                     cc.log("=====[onMessage]=====" +len);
                     cc.log("=====[onMessage]=====" +content);
                     var request = self._requestMap.get(msgId);
-                    if(request&&request.getResponseId()==msgId&&!request.isInvalid()){
+                    if(request&&request.getResponseId()==new Number(msgId)&&!request.isInvalid()){
                         var  responseCallback = request.getResponseCallback();
                         if(responseCallback){
                             responseCallback(jsonData);
@@ -94,7 +94,7 @@ cc.slots.DataManager = cc.Class.extend({
             cc.w.log.e("cc.slots.DataManager","request() params error");
             return;
         }
-        if(this._requestMap.get(request.getRequestId())){//如果之前有同样的请求，则不处理这个请求
+        if(this._requestMap.get(request.getResponseId())){//如果之前有同样的请求，则不处理这个请求
             cc.w.log.e("cc.slots.DataManager","request exists");
             return;
         }
@@ -102,7 +102,7 @@ cc.slots.DataManager = cc.Class.extend({
         //    request.getResponseCallback()();
         //    return;
         //}
-        this._requestMap.put(request.getRequestId(),request);
+        this._requestMap.put(request.getResponseId(),request);
         var self = this;
         var preLen = 8;
         var dataStr  = request.getParams();
@@ -125,8 +125,8 @@ cc.slots.DataManager = cc.Class.extend({
             }
         }
         this._webSocket.send(buffer);
-        //cc.log("on send:"+new TextDecoder('utf-8').decode(buffer.slice(8)));
-        cc.log("=====cc.slots.DataManager request DONE!=====");
+        cc.log("on send:"+new TextDecoder('utf-8').decode(buffer.slice(8)));
+        cc.log("=====cc.slots.DataManager request start=====");
         request.startTimeoutTimer(request.getResponseCallback());
     }
 });
@@ -172,7 +172,8 @@ cc.slots.net.Request = cc.Class.extend({
         if(this._timeoutKey==null){
             return;
         }
-        cc.director.getScheduler().unschedule(this._timeoutKey,this)
+        cc.director.getScheduler().unschedule(this._timeoutKey,this);
+        cc.log("=====cc.slots.DataManager request finished=====");
     },
     getRequestId:function(){
         return this._requestId;
